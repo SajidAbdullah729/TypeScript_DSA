@@ -5,7 +5,7 @@ STL-style **data structures and algorithms** for TypeScript: Vector, Stack, Queu
 ## Install
 
 ```bash
-npm install typescript_dsa
+npm install typescript-dsa-stl
 ```
 
 ## Quick start
@@ -23,7 +23,7 @@ import {
   max,
   clamp,
   range,
-} from 'typescript_dsa';
+} from 'typescript-dsa-stl';
 
 // Collections
 const vec = new Vector<number>([1, 2, 3]);
@@ -75,10 +75,10 @@ range(0, 5);            // [0, 1, 2, 3, 4]
 ### Subpath imports (tree-shaking)
 
 ```ts
-import { Vector, Stack } from 'typescript_dsa/collections';
-import { sort, binarySearch } from 'typescript_dsa/algorithms';
-import { clamp, range } from 'typescript_dsa/utils';
-import type { Comparator } from 'typescript_dsa/types';
+import { Vector, Stack } from 'typescript-dsa-stl/collections';
+import { sort, binarySearch } from 'typescript-dsa-stl/algorithms';
+import { clamp, range } from 'typescript-dsa-stl/utils';
+import type { Comparator } from 'typescript-dsa-stl/types';
 ```
 
 ## Data structures
@@ -97,7 +97,7 @@ import type { Comparator } from 'typescript_dsa/types';
 1. **Set repo URLs** in `package.json`: replace `your-username` in `repository`, `homepage`, and `bugs` with your GitHub username (and repo name if different).
 2. **Build**: `npm run build`
 3. **Login**: `npm login`
-4. **Publish**: `npm publish` (use `npm publish --access public` if you use a scoped name like `@yourusername/typescript_dsa`)
+4. **Publish**: `npm publish` (use `npm publish --access public` if you use a scoped name like `@yourusername/typescript-dsa-stl`)
 
 ## Scripts
 

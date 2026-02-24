@@ -3,7 +3,7 @@
  * Clone the repo and import from this package.
  *
  * @example
- * import { Vector, Stack, Queue, List, sort, binarySearch, clamp } from 'typescript_dsa';
+ * import { Vector, Stack, Queue, List, sort, binarySearch, clamp } from 'typescript-dsa-stl';
  */
 
 export { Vector, Stack, Queue, List, ListNode } from './collections/index.js';

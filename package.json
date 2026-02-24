@@ -1,5 +1,5 @@
 {
-  "name": "typescript_dsa",
+  "name": "typescript-dsa-stl",
   "version": "1.0.0",
   "description": "TypeScript_DSA — STL-like data structures and algorithms. Vector, Stack, Queue, List, sort, binarySearch, and more.",
   "type": "module",
@@ -44,7 +44,7 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
-    "typescript_dsa",
+    "typescript-dsa-stl",
     "TypeScript_DSA",
     "dsa",
     "data-structures",
@@ -62,11 +62,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/typescript_dsa.git"
+    "url": "https://github.com/SajidAbdullah729/TypeScript_DSA.git"
   },
-  "homepage": "https://github.com/your-username/typescript_dsa#readme",
+  "homepage": "https://github.com/SajidAbdullah729/TypeScript_DSA#readme",
   "bugs": {
-    "url": "https://github.com/your-username/typescript_dsa/issues"
+    "url": "https://github.com/SajidAbdullah729/TypeScript_DSA/issues"
   },
   "engines": {
     "node": ">=18"
