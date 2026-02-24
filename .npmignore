@@ -1,0 +1,21 @@
+# Source (only dist is published)
+src/
+*.ts
+!*.d.ts
+
+# Dev and tooling
+node_modules/
+.git/
+.gitignore
+.env
+.DS_Store
+*.log
+*.tsbuildinfo
+.vscode/
+.idea/
+coverage/
+*.test.ts
+*.spec.ts
+
+# Don’t ignore README (needed for npm page)
+!README.md
