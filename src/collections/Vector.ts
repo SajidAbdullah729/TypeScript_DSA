@@ -13,8 +13,9 @@ export class Vector<T> {
       return;
     }
     if (typeof initial === 'number') {
-      this._data = new Array(Math.max(0, initial));
-      this._length = initial;
+      const n = Math.max(0, initial);
+      this._data = new Array(n);
+      this._length = n;
       return;
     }
     this._data = [...initial];
