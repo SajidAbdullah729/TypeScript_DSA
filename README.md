@@ -1,12 +1,18 @@
 # TypeScript_DSA
 
-STL-style **data structures and algorithms** for TypeScript: Vector, Stack, Queue, List, and algorithms (sort, binarySearch, lowerBound, min, max, etc.). Publishable npm package.
+**This is the GitHub repository** for the npm package **[typescript-dsa-stl](https://www.npmjs.com/package/typescript-dsa-stl)**.
+
+STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, **Queue**, **List**, and algorithms (`sort`, `binarySearch`, `lowerBound`, `min`, `max`, etc.). Install from npm to use in your project; this repo holds the source code.
+
+---
 
 ## Install
 
 ```bash
 npm install typescript-dsa-stl
 ```
+
+---
 
 ## Quick start
 
@@ -63,6 +69,8 @@ clamp(42, 0, 10);       // 10
 range(0, 5);            // [0, 1, 2, 3, 4]
 ```
 
+---
+
 ## API overview
 
 | Module | Exports |
@@ -81,6 +89,8 @@ import { clamp, range } from 'typescript-dsa-stl/utils';
 import type { Comparator } from 'typescript-dsa-stl/types';
 ```
 
+---
+
 ## Data structures
 
 | Structure | Access | Insert end | Insert middle | Remove end | Remove middle |
@@ -90,18 +100,17 @@ import type { Comparator } from 'typescript-dsa-stl/types';
 | **Queue** | — | O(1)* | — | O(1)* | — |
 | **List** | O(n) | O(1) | O(1)** | O(1) | O(1)** |
 
-\* Amortized. \** At a known node.
+\* Amortized.  
+\** At a known node.
 
-## Publish this package to npm
+---
 
-1. **Set repo URLs** in `package.json`: replace `your-username` in `repository`, `homepage`, and `bugs` with your GitHub username (and repo name if different).
-2. **Build**: `npm run build`
-3. **Login**: `npm login`
-4. **Publish**: `npm publish` (use `npm publish --access public` if you use a scoped name like `@yourusername/typescript-dsa-stl`)
+## For maintainers
 
-## Scripts
+- **Build:** `npm run build` (also runs before `npm publish` via `prepublishOnly`)
+- **Publish:** `npm publish` (use `npm publish --access public` for a scoped package name)
 
-- `npm run build` — compile TypeScript to `dist/` (runs automatically before `npm publish` via `prepublishOnly`)
+---
 
 ## License
 
