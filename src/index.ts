@@ -6,7 +6,18 @@
  * import { Vector, Stack, Queue, List, sort, binarySearch, clamp } from 'typescript-dsa-stl';
  */
 
-export { Vector, Stack, Queue, List, ListNode } from './collections/index.js';
+export {
+  Vector,
+  Stack,
+  Queue,
+  List,
+  ListNode,
+  PriorityQueue,
+  OrderedMap,
+  UnorderedMap,
+  OrderedSet,
+  UnorderedSet,
+} from './collections/index.js';
 export {
   sort,
   find,

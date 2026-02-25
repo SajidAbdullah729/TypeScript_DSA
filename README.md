@@ -2,7 +2,7 @@
 
 **This is the GitHub repository** for the npm package **[typescript-dsa-stl](https://www.npmjs.com/package/typescript-dsa-stl)**.
 
-STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, **Queue**, **List**, and algorithms (`sort`, `binarySearch`, `lowerBound`, `min`, `max`, etc.). Install from npm to use in your project; this repo holds the source code.
+STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, **Queue**, **List**, **PriorityQueue**, **OrderedMap** (Map), **UnorderedMap**, **OrderedSet** (Set), **UnorderedSet**, and algorithms (`sort`, `binarySearch`, `lowerBound`, `min`, `max`, etc.). Install from npm to use in your project; this repo holds the source code.
 
 ---
 
@@ -22,6 +22,11 @@ import {
   Stack,
   Queue,
   List,
+  PriorityQueue,
+  OrderedMap,
+  UnorderedMap,
+  OrderedSet,
+  UnorderedSet,
   sort,
   find,
   binarySearch,
@@ -52,6 +57,21 @@ const node = list.pushBack(20);
 list.insertBefore(node, 15);
 console.log(list.toArray()); // [10, 15, 20]
 
+// PriorityQueue (max-heap by default)
+const pq = new PriorityQueue<number>();
+pq.push(3); pq.push(1); pq.push(4);
+console.log(pq.top()); // 4
+pq.pop();
+
+// OrderedMap (keys sorted), UnorderedMap (hash)
+const map = new UnorderedMap<string, number>();
+map.set('a', 1); map.set('b', 2);
+console.log(map.get('a')); // 1
+
+// OrderedSet (sorted unique), UnorderedSet (hash)
+const set = new UnorderedSet<number>([1, 2, 2, 3]);
+console.log(set.size); // 3
+
 // Algorithms (work on arrays and iterables)
 const arr = [3, 1, 4, 1, 5];
 sort(arr);               // [1, 1, 3, 4, 5]
@@ -75,7 +95,7 @@ range(0, 5);            // [0, 1, 2, 3, 4]
 
 | Module | Exports |
 |--------|--------|
-| **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode` |
+| **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet` |
 | **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition` |
 | **Utils** | `clamp`, `range`, `noop`, `identity`, `swap` |
 | **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray` |
@@ -99,8 +119,13 @@ import type { Comparator } from 'typescript-dsa-stl/types';
 | **Stack** | — | O(1) | — | O(1) | — |
 | **Queue** | — | O(1)* | — | O(1)* | — |
 | **List** | O(n) | O(1) | O(1)** | O(1) | O(1)** |
+| **PriorityQueue** | — | O(log n) | — | O(log n) | — |
+| **OrderedMap** (Map) | O(log n) get | O(n) set | — | O(n) delete | — |
+| **UnorderedMap** | O(1)* get/set | O(1)* | — | O(1)* delete | — |
+| **OrderedSet** (Set) | O(log n) has | O(n) add | — | O(n) delete | — |
+| **UnorderedSet** | O(1)* has/add | O(1)* | — | O(1)* delete | — |
 
-\* Amortized.  
+\* Amortized (hash).  
 \** At a known node.
 
 ---
