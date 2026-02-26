@@ -89,6 +89,48 @@ clamp(42, 0, 10);       // 10
 range(0, 5);            // [0, 1, 2, 3, 4]
 ```
 
+### 2D and 3D vectors (like C++ `vector<vector<int>>`)
+
+`Vector<T>` is generic, so you can nest it for 2D/3D grids:
+
+| C++ | TypeScript |
+|-----|------------|
+| `vector<int>` | `Vector<number>` |
+| `vector<vector<int>>` | `Vector<Vector<number>>` |
+| `vector<vector<vector<int>>>` | `Vector<Vector<Vector<number>>>` |
+
+**2D example:**
+
+```ts
+import { Vector } from 'typescript-dsa-stl';
+
+const grid = new Vector<Vector<number>>();
+
+const row0 = new Vector<number>([1, 2, 3]);
+const row1 = new Vector<number>([4, 5, 6]);
+grid.push(row0);
+grid.push(row1);
+
+grid.at(0).at(1);   // 2  (first row, second column)
+grid.at(1).at(0);   // 4  (second row, first column)
+
+grid.at(0).set(1, 99);
+grid.at(0).push(10);
+```
+
+**3D example:**
+
+```ts
+const cube = new Vector<Vector<Vector<number>>>();
+
+const layer0 = new Vector<Vector<number>>();
+layer0.push(new Vector<number>([1, 2]));
+layer0.push(new Vector<number>([3, 4]));
+cube.push(layer0);
+
+cube.at(0).at(1).at(0);  // 3  (layer 0, row 1, col 0)
+```
+
 ---
 
 ## API overview
