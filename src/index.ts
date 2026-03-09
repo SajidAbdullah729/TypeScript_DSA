@@ -17,6 +17,8 @@ export {
   UnorderedMap,
   OrderedSet,
   UnorderedSet,
+  OrderedMultiSet,
+  OrderedMultiMap,
 } from './collections/index.js';
 export {
   sort,

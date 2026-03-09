@@ -7,3 +7,5 @@ export { OrderedMap } from './OrderedMap.js';
 export { UnorderedMap } from './UnorderedMap.js';
 export { OrderedSet } from './OrderedSet.js';
 export { UnorderedSet } from './UnorderedSet.js';
+export { OrderedMultiSet } from './OrderedMultiSet.js';
+export { OrderedMultiMap } from './OrderedMultiMap.js';

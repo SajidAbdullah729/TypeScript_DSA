@@ -2,7 +2,7 @@
 
 **This is the GitHub repository** for the npm package **[typescript-dsa-stl](https://www.npmjs.com/package/typescript-dsa-stl)**.
 
-STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, **Queue**, **List**, **PriorityQueue**, **OrderedMap** (Map), **UnorderedMap**, **OrderedSet** (Set), **UnorderedSet**, and algorithms (`sort`, `binarySearch`, `lowerBound`, `min`, `max`, etc.). Install from npm to use in your project; this repo holds the source code.
+STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, **Queue**, **List**, **PriorityQueue**, **OrderedMap** (Map), **UnorderedMap**, **OrderedSet** (Set), **UnorderedSet**, **OrderedMultiMap**, **OrderedMultiSet**, and algorithms (`sort`, `binarySearch`, `lowerBound`, `min`, `max`, etc.). Install from npm to use in your project; this repo holds the source code.
 
 ---
 
@@ -27,6 +27,8 @@ import {
   UnorderedMap,
   OrderedSet,
   UnorderedSet,
+  OrderedMultiMap,
+  OrderedMultiSet,
   sort,
   find,
   binarySearch,
@@ -71,6 +73,17 @@ console.log(map.get('a')); // 1
 // OrderedSet (sorted unique), UnorderedSet (hash)
 const set = new UnorderedSet<number>([1, 2, 2, 3]);
 console.log(set.size); // 3
+
+// OrderedMultiSet (sorted, duplicates allowed)
+const multiSet = new OrderedMultiSet<number>();
+multiSet.add(3); multiSet.add(1); multiSet.add(2); multiSet.add(2);
+console.log(multiSet.toArray()); // [1, 2, 2, 3]
+console.log(multiSet.count(2));  // 2
+
+// OrderedMultiMap (one key → multiple values, keys sorted)
+const multiMap = new OrderedMultiMap<string, number>();
+multiMap.set('scores', 90); multiMap.set('scores', 85); multiMap.set('scores', 95);
+console.log(multiMap.getAll('scores')); // [90, 85, 95]
 
 // Algorithms (work on arrays and iterables)
 const arr = [3, 1, 4, 1, 5];
@@ -137,7 +150,7 @@ cube.at(0).at(1).at(0);  // 3  (layer 0, row 1, col 0)
 
 | Module | Exports |
 |--------|--------|
-| **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet` |
+| **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet` |
 | **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition` |
 | **Utils** | `clamp`, `range`, `noop`, `identity`, `swap` |
 | **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray` |
@@ -166,9 +179,61 @@ import type { Comparator } from 'typescript-dsa-stl/types';
 | **UnorderedMap** | O(1)* get/set | O(1)* | — | O(1)* delete | — |
 | **OrderedSet** (Set) | O(log n) has | O(n) add | — | O(n) delete | — |
 | **UnorderedSet** | O(1)* has/add | O(1)* | — | O(1)* delete | — |
+| **OrderedMultiMap** | O(log n) get | O(n) set | — | O(n) delete | — |
+| **OrderedMultiSet** | O(log n) has/count | O(n) add | — | O(n) delete | — |
 
 \* Amortized (hash).  
 \** At a known node.
+
+---
+
+## OrderedMultiMap and OrderedMultiSet — use cases
+
+**OrderedMultiSet** is a sorted collection that allows duplicate elements (like C++ `std::multiset`). Use it when you need ordering and multiple copies of the same value.
+
+| Use case | Example |
+|----------|---------|
+| **Sorted runs / leaderboard with ties** | Store scores; multiple users can have the same score. Iterate in sorted order, use `count(score)` for ties. |
+| **Event timeline with repeated timestamps** | Add events by time; several events can share the same time. `add(timestamp)`, iterate in order. |
+| **K-th smallest in a multiset** | Keep elements sorted; k-th element is at index `k - 1` in iteration. |
+| **Range counts** | Combined with binary search ideas: count elements in `[low, high]` using `count` and iteration. |
+
+**OrderedMultiMap** maps one key to multiple values while keeping keys sorted (like C++ `std::multimap`). Use it when a key can have several associated values and you need key order.
+
+| Use case | Example |
+|----------|---------|
+| **Inverted index** | Key = term, values = document IDs containing that term. `set(term, docId)` for each occurrence; `getAll(term)` returns all doc IDs. |
+| **Grouping by key** | Key = category, values = items. `set(category, item)`; iterate keys in order, use `getAll(key)` per group. |
+| **One-to-many relations** | Key = user ID, values = session IDs. `set(userId, sessionId)`; `getAll(userId)` lists all sessions. |
+| **Time-series by bucket** | Key = time bucket, values = events. Sorted keys give chronological buckets; `getAll(bucket)` gets events in that bucket. |
+
+### OrderedMultiSet example
+
+```ts
+import { OrderedMultiSet } from 'typescript-dsa-stl';
+
+const scores = new OrderedMultiSet<number>();
+scores.add(85); scores.add(92); scores.add(85); scores.add(78);
+console.log(scores.toArray());   // [78, 85, 85, 92]
+console.log(scores.count(85));   // 2
+scores.delete(85);               // remove one 85
+console.log(scores.count(85));   // 1
+scores.deleteAll(85);            // remove all 85s
+```
+
+### OrderedMultiMap example
+
+```ts
+import { OrderedMultiMap } from 'typescript-dsa-stl';
+
+const index = new OrderedMultiMap<string, number>();  // term -> doc IDs
+index.set('typescript', 1); index.set('typescript', 3); index.set('stl', 2);
+console.log(index.getAll('typescript'));  // [1, 3]
+console.log(index.get('stl'));            // 2
+for (const [key, value] of index) {
+  console.log(key, value);               // keys in sorted order
+}
+```
 
 ---
 
