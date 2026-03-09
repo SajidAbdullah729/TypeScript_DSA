@@ -9,3 +9,4 @@ export { OrderedSet } from './OrderedSet.js';
 export { UnorderedSet } from './UnorderedSet.js';
 export { OrderedMultiSet } from './OrderedMultiSet.js';
 export { OrderedMultiMap } from './OrderedMultiMap.js';
+export { RedBlackTree, RBNode } from './RedBlackTree.js';

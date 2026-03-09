@@ -175,12 +175,12 @@ import type { Comparator } from 'typescript-dsa-stl/types';
 | **Queue** | — | O(1)* | — | O(1)* | — |
 | **List** | O(n) | O(1) | O(1)** | O(1) | O(1)** |
 | **PriorityQueue** | — | O(log n) | — | O(log n) | — |
-| **OrderedMap** (Map) | O(log n) get | O(n) set | — | O(n) delete | — |
+| **OrderedMap** (Map) | O(log n) get | O(log n) set | — | O(log n) delete | — |
 | **UnorderedMap** | O(1)* get/set | O(1)* | — | O(1)* delete | — |
-| **OrderedSet** (Set) | O(log n) has | O(n) add | — | O(n) delete | — |
+| **OrderedSet** (Set) | O(log n) has | O(log n) add | — | O(log n) delete | — |
 | **UnorderedSet** | O(1)* has/add | O(1)* | — | O(1)* delete | — |
-| **OrderedMultiMap** | O(log n) get | O(n) set | — | O(n) delete | — |
-| **OrderedMultiSet** | O(log n) has/count | O(n) add | — | O(n) delete | — |
+| **OrderedMultiMap** | O(log n) get | O(log n) set | — | O(log n) delete | — |
+| **OrderedMultiSet** | O(log n) has/count | O(log n) add | — | O(log n) delete | — |
 
 \* Amortized (hash).  
 \** At a known node.

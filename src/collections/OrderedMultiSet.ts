@@ -1,97 +1,65 @@
 /**
  * Ordered multiset (STL-style multiset). Elements sorted by comparator; duplicates allowed.
- * O(log n) has/count, O(n) add/delete. Implemented with a sorted array and binary search.
+ * O(log n) has/count/add/delete. Implemented with a Red-Black tree (duplicate keys allowed).
  */
 import type { Comparator } from '../types/index.js';
+import { RedBlackTree } from './RedBlackTree.js';
 
 function defaultCompare<T>(a: T, b: T): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
 export class OrderedMultiSet<T> {
-  private _data: T[] = [];
-  private _compare: Comparator<T>;
+  private _tree: RedBlackTree<T, T>;
 
   constructor(compare?: Comparator<T>) {
-    this._compare = compare ?? defaultCompare;
+    this._tree = new RedBlackTree<T, T>({
+      compare: compare ?? defaultCompare,
+      allowDuplicateKeys: true,
+    });
   }
 
   get size(): number {
-    return this._data.length;
+    return this._tree.size;
   }
 
   get empty(): boolean {
-    return this._data.length === 0;
-  }
-
-  private _lowerBound(value: T): number {
-    const cmp = this._compare;
-    let lo = 0;
-    let hi = this._data.length;
-    while (lo < hi) {
-      const mid = (lo + hi) >>> 1;
-      if (cmp(this._data[mid], value) < 0) lo = mid + 1;
-      else hi = mid;
-    }
-    return lo;
-  }
-
-  private _upperBound(value: T): number {
-    const cmp = this._compare;
-    let lo = 0;
-    let hi = this._data.length;
-    while (lo < hi) {
-      const mid = (lo + hi) >>> 1;
-      if (cmp(value, this._data[mid]) < 0) hi = mid;
-      else lo = mid + 1;
-    }
-    return lo;
+    return this._tree.empty;
   }
 
   has(value: T): boolean {
-    const i = this._lowerBound(value);
-    return i < this._data.length && this._compare(this._data[i], value) === 0;
+    return this._tree.has(value);
   }
 
   /** Number of elements equal to value. */
   count(value: T): number {
-    return this._upperBound(value) - this._lowerBound(value);
+    return this._tree.count(value);
   }
 
   /** Insert value (duplicates allowed). */
   add(value: T): void {
-    const i = this._lowerBound(value);
-    this._data.splice(i, 0, value);
+    this._tree.set(value, value);
   }
 
   /** Remove one occurrence of value. Returns true if removed. */
   delete(value: T): boolean {
-    const i = this._lowerBound(value);
-    if (i < this._data.length && this._compare(this._data[i], value) === 0) {
-      this._data.splice(i, 1);
-      return true;
-    }
-    return false;
+    return this._tree.deleteKey(value);
   }
 
   /** Remove all occurrences of value. Returns count removed. */
   deleteAll(value: T): number {
-    const lo = this._lowerBound(value);
-    const hi = this._upperBound(value);
-    const removed = hi - lo;
-    if (removed > 0) this._data.splice(lo, removed);
-    return removed;
+    return this._tree.deleteAllKeys(value);
   }
 
   clear(): void {
-    this._data.length = 0;
+    this._tree.clear();
   }
 
   [Symbol.iterator](): Iterator<T> {
-    return this._data[Symbol.iterator]();
+    return this._tree.keys();
   }
 
   toArray(): T[] {
-    return [...this._data];
+    return [...this._tree.keys()];
   }
 }
