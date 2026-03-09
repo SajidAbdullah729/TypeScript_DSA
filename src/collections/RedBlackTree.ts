@@ -264,7 +264,7 @@ export class RedBlackTree<K, V> {
       yOriginalColor = y.color;
       x = y.right;
       if (y.parent === z) {
-        if (x !== this._nil) x.parent = y;
+        x.parent = y;
       } else {
         this._transplant(y, y.right);
         y.right = z.right;
@@ -308,7 +308,7 @@ export class RedBlackTree<K, V> {
           w = x.parent.right;
         }
         if (w.left.color === BLACK && w.right.color === BLACK) {
-          w.color = RED;
+          if (w !== this._nil) w.color = RED;
           x = x.parent;
         } else {
           if (w.right.color === BLACK) {
@@ -332,7 +332,7 @@ export class RedBlackTree<K, V> {
           w = x.parent.left;
         }
         if (w.right.color === BLACK && w.left.color === BLACK) {
-          w.color = RED;
+          if (w !== this._nil) w.color = RED;
           x = x.parent;
         } else {
           if (w.left.color === BLACK) {
