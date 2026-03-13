@@ -144,6 +144,99 @@ cube.push(layer0);
 cube.at(0).at(1).at(0);  // 3  (layer 0, row 1, col 0)
 ```
 
+### Graph adjacency lists (like C++ `vector<vector<type>> adj(n)`)
+
+You can model C++-style adjacency lists using the graph helper types exported from `typescript-dsa-stl/types`.
+
+#### Unweighted adjacency list
+
+C++:
+
+```cpp
+int n = 5;
+vector<vector<int>> adj(n);
+adj[u].push_back(v);   // or adj[u].pb(v);
+```
+
+TypeScript (manual `push`):
+
+```ts
+import type { AdjacencyList } from 'typescript-dsa-stl/types';
+
+const n = 5;
+// number of vertices = n, initially all neighbors empty
+const adj: AdjacencyList<number> = Array.from({ length: n }, () => []);
+
+// C++: adj[u].push_back(v);
+adj[u].push(v);
+
+// Iteration is the same idea as in C++
+for (const v of adj[u]) {
+  // neighbor v
+}
+```
+
+TypeScript (with helpers `addEdge` / `deleteEdge`):
+
+```ts
+import type { AdjacencyList } from 'typescript-dsa-stl/types';
+import { addEdge, deleteEdge } from 'typescript-dsa-stl/types';
+
+const n = 5;
+const adj: AdjacencyList<number> = Array.from({ length: n }, () => []);
+
+addEdge(adj, u, v);        // add u -> v
+deleteEdge(adj, u, v);     // remove all edges u -> v
+```
+
+#### Weighted adjacency list
+
+In C++ you might write:
+
+```cpp
+int n = 5;
+vector<vector<pair<int,int>>> adj(n);
+adj[u].push_back({v, w});   // edge u -> v with weight w
+```
+
+In TypeScript, use `WeightedEdge` and `WeightedAdjacencyList`:
+
+```ts
+import type {
+  WeightedEdge,
+  WeightedAdjacencyList,
+} from 'typescript-dsa-stl/types';
+
+const n = 5;
+const adj: WeightedAdjacencyList<number, number> =
+  Array.from({ length: n }, () => []);
+
+// C++: adj[u].push_back({v, w});
+adj[u].push({ to: v, weight: w });
+
+// When iterating, you get both neighbor and weight
+for (const { to, weight } of adj[u]) {
+  // edge u -> to with cost = weight
+}
+
+// If you prefer a different vertex or weight type, just change the generics:
+// const adj: WeightedAdjacencyList<string, bigint> = ...
+```
+
+Or with the helper functions `addEdge` / `deleteEdge`:
+
+```ts
+import type { WeightedAdjacencyList } from 'typescript-dsa-stl/types';
+import { addEdge, deleteEdge } from 'typescript-dsa-stl/types';
+
+const n = 5;
+const adj: WeightedAdjacencyList<number, number> =
+  Array.from({ length: n }, () => []);
+
+addEdge(adj, u, v, w);         // add u -> v with weight w
+deleteEdge(adj, u, v, w);      // delete all edges u -> v with weight w
+```
+
 ---
 
 ## API overview
@@ -153,7 +246,7 @@ cube.at(0).at(1).at(0);  // 3  (layer 0, row 1, col 0)
 | **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet` |
 | **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition` |
 | **Utils** | `clamp`, `range`, `noop`, `identity`, `swap` |
-| **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray` |
+| **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList` |
 
 ### Subpath imports (tree-shaking)
 
