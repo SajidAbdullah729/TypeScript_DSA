@@ -21,6 +21,8 @@ export {
   OrderedMultiMap,
   addEdge,
   deleteEdge,
+  createAdjacencyList,
+  createWeightedAdjacencyList,
 } from './collections/index.js';
 export type { WeightedEdge, AdjacencyList, WeightedAdjacencyList } from './collections/index.js';
 export {

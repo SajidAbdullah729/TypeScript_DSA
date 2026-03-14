@@ -158,14 +158,13 @@ vector<vector<int>> graph(n);
 graph[u].push_back(v);   // or graph[u].pb(v);
 ```
 
-TypeScript (manual `push`):
+TypeScript (easy declaration with `createAdjacencyList`):
 
 ```ts
-import type { AdjacencyList } from 'typescript-dsa-stl/collections';
+import { createAdjacencyList } from 'typescript-dsa-stl/collections';
 
 const n = 5;
-// number of vertices = n, initially all neighbors empty
-const graph: AdjacencyList<number> = Array.from({ length: n }, () => []);
+const graph = createAdjacencyList(n);   // empty graph with n vertices
 
 // C++: graph[u].push_back(v);
 graph[u].push(v);
@@ -176,14 +175,12 @@ for (const v of graph[u]) {
 }
 ```
 
-TypeScript (with helpers `addEdge` / `deleteEdge`):
+Or with helpers `addEdge` / `deleteEdge`:
 
 ```ts
-import type { AdjacencyList } from 'typescript-dsa-stl/collections';
-import { addEdge, deleteEdge } from 'typescript-dsa-stl/collections';
+import { createAdjacencyList, addEdge, deleteEdge } from 'typescript-dsa-stl/collections';
 
-const n = 5;
-const graph: AdjacencyList<number> = Array.from({ length: n }, () => []);
+const graph = createAdjacencyList(5);
 
 addEdge(graph, u, v);        // add u -> v
 deleteEdge(graph, u, v);     // remove all edges u -> v
@@ -199,17 +196,13 @@ vector<vector<pair<int,int>>> graph(n);
 graph[u].push_back({v, w});   // edge u -> v with weight w
 ```
 
-In TypeScript, use `WeightedEdge` and `WeightedAdjacencyList`:
+In TypeScript, use `createWeightedAdjacencyList` for easy declaration:
 
 ```ts
-import type {
-  WeightedEdge,
-  WeightedAdjacencyList,
-} from 'typescript-dsa-stl/collections';
+import { createWeightedAdjacencyList } from 'typescript-dsa-stl/collections';
 
 const n = 5;
-const graph: WeightedAdjacencyList<number, number> =
-  Array.from({ length: n }, () => []);
+const graph = createWeightedAdjacencyList(n);   // empty weighted graph with n vertices
 
 // C++: graph[u].push_back({v, w});
 graph[u].push({ to: v, weight: w });
@@ -218,20 +211,14 @@ graph[u].push({ to: v, weight: w });
 for (const { to, weight } of graph[u]) {
   // edge u -> to with cost = weight
 }
-
-// If you prefer a different vertex or weight type, just change the generics:
-// const graph: WeightedAdjacencyList<string, bigint> = ...
 ```
 
 Or with the helper functions `addEdge` / `deleteEdge`:
 
 ```ts
-import type { WeightedAdjacencyList } from 'typescript-dsa-stl/collections';
-import { addEdge, deleteEdge } from 'typescript-dsa-stl/collections';
+import { createWeightedAdjacencyList, addEdge, deleteEdge } from 'typescript-dsa-stl/collections';
 
-const n = 5;
-const graph: WeightedAdjacencyList<number, number> =
-  Array.from({ length: n }, () => []);
+const graph = createWeightedAdjacencyList(5);
 
 addEdge(graph, u, v, w);         // add u -> v with weight w
 deleteEdge(graph, u, v, w);      // delete all edges u -> v with weight w
@@ -255,7 +242,7 @@ Use an **unweighted** graph (adjacency list) when you only care about connectivi
 
 | Module | Exports |
 |--------|--------|
-| **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList`, `addEdge`, `deleteEdge` |
+| **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList`, `createAdjacencyList`, `createWeightedAdjacencyList`, `addEdge`, `deleteEdge` |
 | **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition` |
 | **Utils** | `clamp`, `range`, `noop`, `identity`, `swap` |
 | **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray` |

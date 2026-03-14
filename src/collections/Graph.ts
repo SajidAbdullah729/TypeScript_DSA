@@ -38,6 +38,24 @@ export type WeightedAdjacencyList<
 > = WeightedEdge<Vertex, Weight>[][];
 
 /**
+ * Create an empty unweighted graph with `n` vertices (0..n-1).
+ * Equivalent to C++: `vector<vector<int>> graph(n);`
+ */
+export function createAdjacencyList(n: number): AdjacencyList<number> {
+  return Array.from({ length: n }, () => []);
+}
+
+/**
+ * Create an empty weighted graph with `n` vertices (0..n-1).
+ * Equivalent to C++: `vector<vector<pair<int,int>>> graph(n);`
+ */
+export function createWeightedAdjacencyList(
+  n: number,
+): WeightedAdjacencyList<number, number> {
+  return Array.from({ length: n }, () => []);
+}
+
+/**
  * Add an edge to a graph adjacency list.
  *
  * Overloads:
