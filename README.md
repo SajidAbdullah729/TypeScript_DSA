@@ -144,9 +144,9 @@ cube.push(layer0);
 cube.at(0).at(1).at(0);  // 3  (layer 0, row 1, col 0)
 ```
 
-### Graph adjacency lists (like C++ `vector<vector<type>> adj(n)`)
+### Graph adjacency list (like C++ `vector<vector<type>> graph(n)`)
 
-You can model C++-style adjacency lists using the graph helper types exported from `typescript-dsa-stl/types`.
+You can model C++-style adjacency lists using the graph types and helpers exported from `typescript-dsa-stl/collections` (or the main package).
 
 #### Unweighted adjacency list
 
@@ -154,24 +154,24 @@ C++:
 
 ```cpp
 int n = 5;
-vector<vector<int>> adj(n);
-adj[u].push_back(v);   // or adj[u].pb(v);
+vector<vector<int>> graph(n);
+graph[u].push_back(v);   // or graph[u].pb(v);
 ```
 
 TypeScript (manual `push`):
 
 ```ts
-import type { AdjacencyList } from 'typescript-dsa-stl/types';
+import type { AdjacencyList } from 'typescript-dsa-stl/collections';
 
 const n = 5;
 // number of vertices = n, initially all neighbors empty
-const adj: AdjacencyList<number> = Array.from({ length: n }, () => []);
+const graph: AdjacencyList<number> = Array.from({ length: n }, () => []);
 
-// C++: adj[u].push_back(v);
-adj[u].push(v);
+// C++: graph[u].push_back(v);
+graph[u].push(v);
 
 // Iteration is the same idea as in C++
-for (const v of adj[u]) {
+for (const v of graph[u]) {
   // neighbor v
 }
 ```
@@ -179,14 +179,14 @@ for (const v of adj[u]) {
 TypeScript (with helpers `addEdge` / `deleteEdge`):
 
 ```ts
-import type { AdjacencyList } from 'typescript-dsa-stl/types';
-import { addEdge, deleteEdge } from 'typescript-dsa-stl/types';
+import type { AdjacencyList } from 'typescript-dsa-stl/collections';
+import { addEdge, deleteEdge } from 'typescript-dsa-stl/collections';
 
 const n = 5;
-const adj: AdjacencyList<number> = Array.from({ length: n }, () => []);
+const graph: AdjacencyList<number> = Array.from({ length: n }, () => []);
 
-addEdge(adj, u, v);        // add u -> v
-deleteEdge(adj, u, v);     // remove all edges u -> v
+addEdge(graph, u, v);        // add u -> v
+deleteEdge(graph, u, v);     // remove all edges u -> v
 ```
 
 #### Weighted adjacency list
@@ -195,8 +195,8 @@ In C++ you might write:
 
 ```cpp
 int n = 5;
-vector<vector<pair<int,int>>> adj(n);
-adj[u].push_back({v, w});   // edge u -> v with weight w
+vector<vector<pair<int,int>>> graph(n);
+graph[u].push_back({v, w});   // edge u -> v with weight w
 ```
 
 In TypeScript, use `WeightedEdge` and `WeightedAdjacencyList`:
@@ -205,37 +205,49 @@ In TypeScript, use `WeightedEdge` and `WeightedAdjacencyList`:
 import type {
   WeightedEdge,
   WeightedAdjacencyList,
-} from 'typescript-dsa-stl/types';
+} from 'typescript-dsa-stl/collections';
 
 const n = 5;
-const adj: WeightedAdjacencyList<number, number> =
+const graph: WeightedAdjacencyList<number, number> =
   Array.from({ length: n }, () => []);
 
-// C++: adj[u].push_back({v, w});
-adj[u].push({ to: v, weight: w });
+// C++: graph[u].push_back({v, w});
+graph[u].push({ to: v, weight: w });
 
 // When iterating, you get both neighbor and weight
-for (const { to, weight } of adj[u]) {
+for (const { to, weight } of graph[u]) {
   // edge u -> to with cost = weight
 }
 
 // If you prefer a different vertex or weight type, just change the generics:
-// const adj: WeightedAdjacencyList<string, bigint> = ...
+// const graph: WeightedAdjacencyList<string, bigint> = ...
 ```
 
 Or with the helper functions `addEdge` / `deleteEdge`:
 
 ```ts
-import type { WeightedAdjacencyList } from 'typescript-dsa-stl/types';
-import { addEdge, deleteEdge } from 'typescript-dsa-stl/types';
+import type { WeightedAdjacencyList } from 'typescript-dsa-stl/collections';
+import { addEdge, deleteEdge } from 'typescript-dsa-stl/collections';
 
 const n = 5;
-const adj: WeightedAdjacencyList<number, number> =
+const graph: WeightedAdjacencyList<number, number> =
   Array.from({ length: n }, () => []);
 
-addEdge(adj, u, v, w);         // add u -> v with weight w
-deleteEdge(adj, u, v, w);      // delete all edges u -> v with weight w
+addEdge(graph, u, v, w);         // add u -> v with weight w
+deleteEdge(graph, u, v, w);      // delete all edges u -> v with weight w
 ```
+
+#### Graph adjacency list — use cases
+
+Use an **unweighted** graph (adjacency list) when you only care about connectivity; use a **weighted** graph when edges have costs (distance, time, capacity).
+
+| Use case | When to use |
+|----------|-------------|
+| **BFS / DFS, connectivity** | Unweighted: shortest path in terms of hop count, connected components, cycle detection. |
+| **Shortest path (Dijkstra), MST** | Weighted: edge weights as distances or costs; run Dijkstra, Prim, or Kruskal on the list. |
+| **Social / dependency graphs** | Unweighted or weighted: followers, dependencies (e.g. build order), recommendation graphs. |
+| **Grid / game graphs** | Unweighted: 4- or 8-neighbor grids; weighted if movement costs differ per cell. |
+| **Network / flow** | Weighted: capacities or latencies on edges for max-flow or routing. |
 
 ---
 
@@ -243,10 +255,10 @@ deleteEdge(adj, u, v, w);      // delete all edges u -> v with weight w
 
 | Module | Exports |
 |--------|--------|
-| **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet` |
+| **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList`, `addEdge`, `deleteEdge` |
 | **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition` |
 | **Utils** | `clamp`, `range`, `noop`, `identity`, `swap` |
-| **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList` |
+| **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray` |
 
 ### Subpath imports (tree-shaking)
 

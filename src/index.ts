@@ -19,7 +19,10 @@ export {
   UnorderedSet,
   OrderedMultiSet,
   OrderedMultiMap,
+  addEdge,
+  deleteEdge,
 } from './collections/index.js';
+export type { WeightedEdge, AdjacencyList, WeightedAdjacencyList } from './collections/index.js';
 export {
   sort,
   find,

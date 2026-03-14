@@ -10,3 +10,5 @@ export { UnorderedSet } from './UnorderedSet.js';
 export { OrderedMultiSet } from './OrderedMultiSet.js';
 export { OrderedMultiMap } from './OrderedMultiMap.js';
 export { RedBlackTree, RBNode } from './RedBlackTree.js';
+export type { WeightedEdge, AdjacencyList, WeightedAdjacencyList } from './Graph.js';
+export { addEdge, deleteEdge } from './Graph.js';
