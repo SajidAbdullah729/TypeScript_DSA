@@ -14,3 +14,7 @@ export {
   max,
   partition,
 } from './array.js';
+
+export { DisjointSetUnion } from './disjointSetUnion.js';
+export type { WeightedUndirectedEdge } from './graph.js';
+export { connectedComponents, kruskalMST } from './graph.js';

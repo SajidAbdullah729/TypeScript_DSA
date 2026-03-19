@@ -40,7 +40,11 @@ export {
   min,
   max,
   partition,
+  DisjointSetUnion,
+  connectedComponents,
+  kruskalMST,
 } from './algorithms/index.js';
+export type { WeightedUndirectedEdge } from './algorithms/index.js';
 export { clamp, range, noop, identity, swap } from './utils/index.js';
 export type { Comparator, Predicate, UnaryFn, Reducer, IterableLike } from './types/index.js';
 export { toArray } from './types/index.js';

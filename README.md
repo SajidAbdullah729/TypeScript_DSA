@@ -236,6 +236,86 @@ Use an **unweighted** graph (adjacency list) when you only care about connectivi
 | **Grid / game graphs** | Unweighted: 4- or 8-neighbor grids; weighted if movement costs differ per cell. |
 | **Network / flow** | Weighted: capacities or latencies on edges for max-flow or routing. |
 
+#### Disjoint Set Union (Union-Find)
+
+Use Union-Find (DSU) to compute connected components efficiently. It merges endpoints of every edge in the adjacency list, so for directed graphs it returns weak connectivity components.
+
+```ts
+import { createAdjacencyList, connectedComponents } from 'typescript-dsa-stl';
+
+const n = 5;
+const graph = createAdjacencyList(n);
+graph[0].push(1);
+graph[1].push(0);
+graph[3].push(4);
+graph[4].push(3);
+
+const comps = connectedComponents(n, graph);
+// e.g. [[0, 1], [2], [3, 4]]
+```
+
+##### Traverse the result
+
+`connectedComponents(n, adj)` returns `number[][]` where each inner array is a component (list of vertices).
+
+```ts
+// 1) Iterate each component
+for (const comp of comps) {
+  // comp is like [v0, v1, ...]
+  for (const v of comp) {
+    // do something with vertex v
+  }
+}
+
+// 2) Component sizes
+const sizes = comps.map(comp => comp.length);
+```
+
+#### Kruskal MST (uses DSU)
+
+For a weighted graph, `kruskalMST` builds a Minimum Spanning Tree (MST) using DSU.
+
+```ts
+import {
+  createWeightedAdjacencyList,
+  addEdge,
+  kruskalMST,
+} from 'typescript-dsa-stl';
+
+const n = 4;
+const wGraph = createWeightedAdjacencyList(n);
+
+// Add undirected edges by adding both directions.
+addEdge(wGraph, 0, 1, 1); addEdge(wGraph, 1, 0, 1);
+addEdge(wGraph, 0, 2, 4); addEdge(wGraph, 2, 0, 4);
+addEdge(wGraph, 1, 2, 2); addEdge(wGraph, 2, 1, 2);
+addEdge(wGraph, 1, 3, 3); addEdge(wGraph, 3, 1, 3);
+
+const { edges, totalWeight } = kruskalMST(n, wGraph, { undirected: true });
+// edges: MST edges (chosen by weight), totalWeight: sum of weights
+```
+
+##### Traverse the MST
+
+`kruskalMST(...)` returns `{ edges, totalWeight }`. To traverse the MST like a graph, convert `edges` into an adjacency list:
+
+```ts
+import { createWeightedAdjacencyList } from 'typescript-dsa-stl/collections';
+
+const mstAdj = createWeightedAdjacencyList(n);
+
+for (const { u, v, weight } of edges) {
+  // MST is undirected (we used { undirected: true })
+  mstAdj[u].push({ to: v, weight });
+  mstAdj[v].push({ to: u, weight });
+}
+
+// Example: iterate neighbors of vertex 0 in the MST
+for (const { to, weight } of mstAdj[0]) {
+  // visit edge 0 -> to (weight)
+}
+```
+
 ---
 
 ## API overview
@@ -243,7 +323,7 @@ Use an **unweighted** graph (adjacency list) when you only care about connectivi
 | Module | Exports |
 |--------|--------|
 | **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList`, `createAdjacencyList`, `createWeightedAdjacencyList`, `addEdge`, `deleteEdge` |
-| **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition` |
+| **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition`, `DisjointSetUnion`, `connectedComponents`, `kruskalMST` |
 | **Utils** | `clamp`, `range`, `noop`, `identity`, `swap` |
 | **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray` |
 
