@@ -2,7 +2,7 @@
 
 **This is the GitHub repository** for the npm package **[typescript-dsa-stl](https://www.npmjs.com/package/typescript-dsa-stl)**.
 
-STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, **Queue**, **List**, **PriorityQueue**, **OrderedMap** (Map), **UnorderedMap**, **OrderedSet** (Set), **UnorderedSet**, **OrderedMultiMap**, **OrderedMultiSet**, and algorithms (`sort`, `binarySearch`, `lowerBound`, `min`, `max`, etc.). Install from npm to use in your project; this repo holds the source code.
+STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, **Queue**, **List**, **PriorityQueue**, **OrderedMap** (Map), **UnorderedMap**, **OrderedSet** (Set), **UnorderedSet**, **OrderedMultiMap**, **OrderedMultiSet**, and algorithms (`sort`, `binarySearch`, `lowerBound`, `min`, `max`, **KnuthMorrisPratt**, **RabinKarp**, **StringRollingHash**, etc.). Install from npm to use in your project; this repo holds the source code.
 
 ---
 
@@ -316,6 +316,113 @@ for (const { to, weight } of mstAdj[0]) {
 }
 ```
 
+#### Knuth–Morris–Pratt (KMP), Rabin–Karp, and string rolling hash
+
+All three work on **UTF-16 code units** (same as `String` indexing). They solve **different jobs**: KMP and Rabin–Karp are **pattern matchers** (list all start indices of a pattern in a text). `StringRollingHash` is a **substring-hash tool** on a **fixed** string—you combine it with your own logic (equality checks, binary search, etc.).
+
+##### When to use which
+
+| Goal | Prefer | Why |
+|------|--------|-----|
+| **Find every occurrence** of **one pattern** in **one text**, with **worst-case** O(n + m), **no hashing**, predictable behaviour | **KnuthMorrisPratt** | LPS table; only character comparisons; no modular arithmetic. |
+| **Find every occurrence** of a pattern using a **sliding window** and **hashes** (triple moduli + final verify) | **RabinKarp** | Same asymptotic average case; good when you think in rolling hashes or batch **same-length** patterns. |
+| **Many O(1) hash queries** on **substrings of one string** you already hold (compare two ranges, palindrome / LCP style checks, rolling checks without slicing) | **StringRollingHash** | O(n) preprocess, O(1) per `substringHash`; **not** a drop-in “find all matches” API—use KMP or Rabin–Karp for that. |
+
+**Concrete situations**
+
+- **Use KMP** when you need a **guaranteed** linear scan (interviews, strict time bounds, large alphabets), or the pattern is **reused** across many searches (`new KnuthMorrisPratt(pattern)` once, `.search(text)` many times).
+- **Use Rabin–Karp** when a **rolling hash** model fits (e.g. one long stream, one pattern), or you later generalize to **several patterns of the same length** (compare each pattern’s triple hash to each window hash). Triple hashing keeps false hash positives negligible; **verification** still guarantees correct indices.
+- **Use `StringRollingHash`** when the problem is **“hash of s[l..r)”** many times on **one** `s`—e.g. check `s[i..i+k) === s[j..j+k)` via hash equality (then confirm if needed), or algorithms that **binary search** on length using substring hashes. For **only** “list all starts of P in T”, pick **KMP** or **Rabin–Karp** instead of building substring hashes by hand.
+
+```ts
+import { KnuthMorrisPratt, RabinKarp, StringRollingHash } from 'typescript-dsa-stl';
+
+// A) Pattern fixed, searched in many buffers — build KMP once, call .search() repeatedly (LPS reused).
+const multiDoc = new KnuthMorrisPratt('ERROR');
+multiDoc.search(serverLog1);
+multiDoc.search(serverLog2);
+
+// B) One haystack, one needle — both matchers return the same indices; KMP = no mods, Rabin–Karp = triple hash + verify.
+const hay = '...long text...';
+KnuthMorrisPratt.findOccurrences(hay, 'needle');
+new RabinKarp('needle').search(hay);
+
+// C) Same static string, many range-equality checks — rolling hash (not for “find all pattern starts” by itself).
+const s = 'banana';
+const rh = new StringRollingHash(s);
+// Does s[1..4) equal s[3..6)? (both length 3)
+const maybe = rh.substringHash(1, 3) === rh.substringHash(3, 3); // then compare slices if you need certainty
+```
+
+**How KMP works:** Build an LPS (longest proper prefix that is also a suffix) table for the pattern, then scan the text once. On a mismatch, the LPS tells you how far to shift the pattern without moving the text pointer backward—**O(n + m)** time, **O(m)** extra space for the pattern’s LPS.
+
+**How Rabin–Karp works:** Use **triple hashing**—three independent polynomial hashes (same base, three distinct prime moduli, see `RABIN_KARP_DEFAULT_MODS`). A position is a candidate only when **all three** window hashes match the pattern’s triple; then a **character-by-character** check runs so reported matches are always correct. Spurious triple collisions are negligible; average **O(n + m)**.
+
+**How rolling hash works:** Precompute prefix hashes and powers of a base modulo a prime. The hash of any substring `s[start .. start + length)` is derived from two prefix values—**O(n)** build, **O(1)** per substring query. Hashes can collide; for critical equality checks, compare actual strings after a hash match.
+
+```ts
+import {
+  KnuthMorrisPratt,
+  StringRollingHash,
+  RabinKarp,
+  RABIN_KARP_DEFAULT_MODS,
+} from 'typescript-dsa-stl';
+
+// --- KMP: construct with the pattern; LPS is built inside the constructor ---
+const kmp = new KnuthMorrisPratt('aba');
+// LPS for "aba" is [0, 0, 1] — used to skip redundant comparisons after a partial match
+
+const positions = kmp.search('ababa');
+// "aba" appears starting at index 0 ("ababa") and index 2 ("aba" at the end)
+console.log(positions); // [0, 2]
+
+// One-shot search without storing an instance (same result as above for this pattern/text)
+console.log(KnuthMorrisPratt.findOccurrences('ababa', 'aba')); // [0, 2]
+
+// Overlapping matches are all reported (each valid start index)
+const overlaps = KnuthMorrisPratt.findOccurrences('aaaa', 'aa');
+// Starts at 0, 1, 2 — three overlapping occurrences of "aa"
+console.log(overlaps); // [0, 1, 2]
+
+// Empty pattern: no matches returned (empty array)
+console.log(new KnuthMorrisPratt('').search('anything')); // []
+
+// --- Rabin–Karp: triple moduli (defaults) + verification; same results as KMP for real matches ---
+const rk = new RabinKarp('aba');
+// RABIN_KARP_DEFAULT_MODS = [1e9+7, 1e9+9, 998244353] — three hashes must agree, then verify
+console.log(RABIN_KARP_DEFAULT_MODS.length); // 3
+console.log(rk.search('ababa')); // [0, 2]
+console.log(RabinKarp.findOccurrences('ababa', 'aba')); // [0, 2]
+// new RabinKarp(pattern, base?, [mod0, mod1, mod2]) — override the three primes if needed
+
+// Overlapping matches (same as KMP)
+console.log(RabinKarp.findOccurrences('aaaa', 'aa')); // [0, 1, 2]
+
+// Empty pattern: no matches
+console.log(new RabinKarp('').search('text')); // []
+
+// --- String rolling hash: default base 131, mod 1_000_000_007 (both configurable) ---
+const rh = new StringRollingHash('hello');
+// Internally: prefix[] and pow[] so substring hashes are O(1)
+
+// Hash of the entire string (same as substring from 0 with full length)
+console.log(rh.fullHash()); // bigint — concrete value depends on base/mod
+console.log(rh.substringHash(0, rh.length())); // same bigint as fullHash()
+
+// Hash of substring "ell" — starts at index 1, length 3
+console.log(rh.substringHash(1, 3)); // bigint for "ell"
+
+// Two equal strings with the same base/mod yield equal full hashes
+const same = new StringRollingHash('hello');
+console.log(rh.fullHash() === same.fullHash()); // true
+
+// Compare a substring of one string to another range (useful for pattern checks)
+const a = new StringRollingHash('banana');
+const b = new StringRollingHash('na');
+// Hash of "na" in "banana" at index 2 should match b’s full hash if substrings equal
+console.log(a.substringHash(2, 2) === b.fullHash()); // true — both are "na"
+```
+
 ---
 
 ## API overview
@@ -323,15 +430,15 @@ for (const { to, weight } of mstAdj[0]) {
 | Module | Exports |
 |--------|--------|
 | **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList`, `createAdjacencyList`, `createWeightedAdjacencyList`, `addEdge`, `deleteEdge` |
-| **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition`, `DisjointSetUnion`, `connectedComponents`, `kruskalMST` |
+| **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition`, `DisjointSetUnion`, `KnuthMorrisPratt`, `RabinKarp`, `RABIN_KARP_DEFAULT_MODS`, `StringRollingHash`, `connectedComponents`, `kruskalMST` |
 | **Utils** | `clamp`, `range`, `noop`, `identity`, `swap` |
-| **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray` |
+| **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray`, `RabinKarpTripleMods` |
 
 ### Subpath imports (tree-shaking)
 
 ```ts
 import { Vector, Stack } from 'typescript-dsa-stl/collections';
-import { sort, binarySearch } from 'typescript-dsa-stl/algorithms';
+import { sort, binarySearch, KnuthMorrisPratt, RabinKarp, StringRollingHash } from 'typescript-dsa-stl/algorithms';
 import { clamp, range } from 'typescript-dsa-stl/utils';
 import type { Comparator } from 'typescript-dsa-stl/types';
 ```

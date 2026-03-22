@@ -41,10 +41,14 @@ export {
   max,
   partition,
   DisjointSetUnion,
+  KnuthMorrisPratt,
+  StringRollingHash,
+  RabinKarp,
+  RABIN_KARP_DEFAULT_MODS,
   connectedComponents,
   kruskalMST,
 } from './algorithms/index.js';
-export type { WeightedUndirectedEdge } from './algorithms/index.js';
+export type { WeightedUndirectedEdge, RabinKarpTripleMods } from './algorithms/index.js';
 export { clamp, range, noop, identity, swap } from './utils/index.js';
 export type { Comparator, Predicate, UnaryFn, Reducer, IterableLike } from './types/index.js';
 export { toArray } from './types/index.js';
