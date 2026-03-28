@@ -45,6 +45,8 @@ export {
   StringRollingHash,
   RabinKarp,
   RABIN_KARP_DEFAULT_MODS,
+  breadthFirstSearch,
+  depthFirstSearch,
   connectedComponents,
   kruskalMST,
 } from './algorithms/index.js';

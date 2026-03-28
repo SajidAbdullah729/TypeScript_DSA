@@ -236,6 +236,70 @@ Use an **unweighted** graph (adjacency list) when you only care about connectivi
 | **Grid / game graphs** | Unweighted: 4- or 8-neighbor grids; weighted if movement costs differ per cell. |
 | **Network / flow** | Weighted: capacities or latencies on edges for max-flow or routing. |
 
+#### Breadth-first search (BFS) and depth-first search (DFS)
+
+`breadthFirstSearch` and `depthFirstSearch` take the number of vertices `n`, an unweighted `AdjacencyList`, and a `start` vertex. They return the **visit order** for all vertices **reachable** from `start` (vertices outside that component are not included). For an undirected graph, add each edge in **both** directions (see `addEdge` below).
+
+**Example graph (diamond):** edges `0—1`, `0—2`, `1—3`, `2—3`.
+
+```text
+      0
+     / \
+    1   2
+     \ /
+      3
+```
+
+With neighbors listed in ascending vertex id (`0: [1,2]`, `1: [0,3]`, …), **BFS** from `0` visits by increasing distance from `0`: first `0`, then `1` and `2`, then `3` → order `[0, 1, 2, 3]`. **DFS** (preorder, first neighbor in each list first) goes `0 → 1 → 3` then `2` → order `[0, 1, 3, 2]`. The exact DFS order depends on how you order each adjacency list.
+
+```ts
+import {
+  createAdjacencyList,
+  addEdge,
+  breadthFirstSearch,
+  depthFirstSearch,
+} from 'typescript-dsa-stl';
+
+const n = 4;
+const graph = createAdjacencyList(n);
+
+// Undirected diamond: add both directions for each edge
+addEdge(graph, 0, 1);
+addEdge(graph, 1, 0);
+addEdge(graph, 0, 2);
+addEdge(graph, 2, 0);
+addEdge(graph, 1, 3);
+addEdge(graph, 3, 1);
+addEdge(graph, 2, 3);
+addEdge(graph, 3, 2);
+
+const start = 0;
+
+// BFS: level-by-level from start (hop count); output: [0, 1, 2, 3]
+console.log(breadthFirstSearch(n, graph, start));
+// Expected console output: [ 0, 1, 2, 3 ]
+
+// DFS: preorder with explicit stack; output: [0, 1, 3, 2] for this adjacency layout
+console.log(depthFirstSearch(n, graph, start));
+// Expected console output: [ 0, 1, 3, 2 ]
+
+// Invalid start → empty traversal
+console.log(breadthFirstSearch(n, graph, -1)); // []
+console.log(depthFirstSearch(n, graph, n)); // []
+
+// Vertex 4 isolated: BFS/DFS from 0 never visits 4
+const withIsolated = createAdjacencyList(5);
+addEdge(withIsolated, 0, 1);
+addEdge(withIsolated, 1, 0);
+console.log(breadthFirstSearch(5, withIsolated, 0)); // [0, 1] — not [0,1,2,3,4]
+```
+
+**Notes**
+
+- **Directed graphs:** only list outgoing edges in `adj[u]`; traversal follows arcs from `start`.
+- **Disconnected graphs:** run again from another unvisited `start`, or use `connectedComponents` to enumerate components first.
+- **Weighted graphs:** for traversal ignoring weights, use the same vertex lists as the unweighted graph (weights are ignored by these two functions).
+
 #### Disjoint Set Union (Union-Find)
 
 Use Union-Find (DSU) to compute connected components efficiently. It merges endpoints of every edge in the adjacency list, so for directed graphs it returns weak connectivity components.
@@ -430,7 +494,7 @@ console.log(a.substringHash(2, 2) === b.fullHash()); // true — both are "na"
 | Module | Exports |
 |--------|--------|
 | **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList`, `createAdjacencyList`, `createWeightedAdjacencyList`, `addEdge`, `deleteEdge` |
-| **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition`, `DisjointSetUnion`, `KnuthMorrisPratt`, `RabinKarp`, `RABIN_KARP_DEFAULT_MODS`, `StringRollingHash`, `connectedComponents`, `kruskalMST` |
+| **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition`, `DisjointSetUnion`, `KnuthMorrisPratt`, `RabinKarp`, `RABIN_KARP_DEFAULT_MODS`, `StringRollingHash`, `breadthFirstSearch`, `depthFirstSearch`, `connectedComponents`, `kruskalMST` |
 | **Utils** | `clamp`, `range`, `noop`, `identity`, `swap` |
 | **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray`, `RabinKarpTripleMods` |
 
@@ -438,7 +502,7 @@ console.log(a.substringHash(2, 2) === b.fullHash()); // true — both are "na"
 
 ```ts
 import { Vector, Stack } from 'typescript-dsa-stl/collections';
-import { sort, binarySearch, KnuthMorrisPratt, RabinKarp, StringRollingHash } from 'typescript-dsa-stl/algorithms';
+import { sort, binarySearch, breadthFirstSearch, depthFirstSearch, KnuthMorrisPratt, RabinKarp, StringRollingHash } from 'typescript-dsa-stl/algorithms';
 import { clamp, range } from 'typescript-dsa-stl/utils';
 import type { Comparator } from 'typescript-dsa-stl/types';
 ```

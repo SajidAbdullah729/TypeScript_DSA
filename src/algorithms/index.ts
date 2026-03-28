@@ -21,4 +21,9 @@ export { StringRollingHash } from './stringHashing.js';
 export { RabinKarp, RABIN_KARP_DEFAULT_MODS } from './rabinKarp.js';
 export type { RabinKarpTripleMods } from './rabinKarp.js';
 export type { WeightedUndirectedEdge } from './graph.js';
-export { connectedComponents, kruskalMST } from './graph.js';
+export {
+  breadthFirstSearch,
+  depthFirstSearch,
+  connectedComponents,
+  kruskalMST,
+} from './graph.js';
