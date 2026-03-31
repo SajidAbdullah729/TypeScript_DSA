@@ -193,3 +193,30 @@ export function dijkstra(
   return { dist, prev };
 }
 
+/**
+ * Reconstruct a path from a `prev` array (as returned by `dijkstra`).
+ *
+ * @returns an array of vertices from start to target (inclusive), or [] if unreachable.
+ */
+export function reconstructPath(
+  prev: readonly number[],
+  start: number,
+  target: number,
+): number[] {
+  if (start < 0 || start >= prev.length) return [];
+  if (target < 0 || target >= prev.length) return [];
+  if (start === target) return [start];
+
+  const path: number[] = [];
+  let v = target;
+  for (let steps = 0; steps < prev.length; steps++) {
+    path.push(v);
+    if (v === start) break;
+    v = prev[v]!;
+    if (v === -1) return [];
+  }
+  if (path[path.length - 1] !== start) return [];
+  path.reverse();
+  return path;
+}
+

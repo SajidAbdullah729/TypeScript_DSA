@@ -368,27 +368,26 @@ It returns:
 - `prev[v]`: previous vertex on the shortest path (or `-1` if none)
 
 ```ts
-import { createWeightedAdjacencyList, addEdge, dijkstra } from 'typescript-dsa-stl';
+import { createWeightedAdjacencyList, addEdge, dijkstra, reconstructPath } from 'typescript-dsa-stl'; // graph + shortest path helpers
 
-const n = 5;
-const g = createWeightedAdjacencyList(n);
+const n = 5; // vertices 0..4
+const g = createWeightedAdjacencyList(n); // WeightedAdjacencyList: g[u] = [{to, weight}, ...]
 
 // Directed edges (add both directions for undirected graphs)
-addEdge(g, 0, 1, 2);
-addEdge(g, 0, 2, 5);
-addEdge(g, 1, 2, 1);
-addEdge(g, 1, 3, 2);
-addEdge(g, 2, 4, 1);
-addEdge(g, 3, 4, 3);
+// addEdge(g, from, to, weight)
+addEdge(g, 0, 1, 2); // 0 -> 1 (cost 2)
+addEdge(g, 0, 2, 5); // 0 -> 2 (cost 5)
+addEdge(g, 1, 2, 1); // 1 -> 2 (cost 1)
+addEdge(g, 1, 3, 2); // 1 -> 3 (cost 2)
+addEdge(g, 2, 4, 1); // 2 -> 4 (cost 1)
+addEdge(g, 3, 4, 3); // 3 -> 4 (cost 3)
 
-const { dist, prev } = dijkstra(n, g, 0);
-console.log(dist); // e.g. [0, 2, 3, 4, 4]
+const { dist, prev } = dijkstra(n, g, 0); // start = 0; dist/prev arrays length n
+console.log(dist); // dist[v] = shortest distance from 0 to v (Infinity if unreachable), e.g. [0, 2, 3, 4, 4]
 
 // Reconstruct path 0 -> 4
-const target = 4;
-const path: number[] = [];
-for (let v = target; v !== -1; v = prev[v]) path.push(v);
-path.reverse();
+const target = 4; // destination vertex
+const path = reconstructPath(prev, 0, target); // [0, ..., target] or [] if unreachable
 console.log(path); // [0, 1, 2, 4]
 ```
 
