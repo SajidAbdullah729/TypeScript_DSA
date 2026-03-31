@@ -359,6 +359,39 @@ const { edges, totalWeight } = kruskalMST(n, wGraph, { undirected: true });
 // edges: MST edges (chosen by weight), totalWeight: sum of weights
 ```
 
+#### Dijkstra shortest paths
+
+`dijkstra` computes single-source shortest paths on a **weighted** graph with **non-negative** edge weights.
+It returns:
+
+- `dist[v]`: shortest distance from `start` to `v` (`Infinity` if unreachable)
+- `prev[v]`: previous vertex on the shortest path (or `-1` if none)
+
+```ts
+import { createWeightedAdjacencyList, addEdge, dijkstra } from 'typescript-dsa-stl';
+
+const n = 5;
+const g = createWeightedAdjacencyList(n);
+
+// Directed edges (add both directions for undirected graphs)
+addEdge(g, 0, 1, 2);
+addEdge(g, 0, 2, 5);
+addEdge(g, 1, 2, 1);
+addEdge(g, 1, 3, 2);
+addEdge(g, 2, 4, 1);
+addEdge(g, 3, 4, 3);
+
+const { dist, prev } = dijkstra(n, g, 0);
+console.log(dist); // e.g. [0, 2, 3, 4, 4]
+
+// Reconstruct path 0 -> 4
+const target = 4;
+const path: number[] = [];
+for (let v = target; v !== -1; v = prev[v]) path.push(v);
+path.reverse();
+console.log(path); // [0, 1, 2, 4]
+```
+
 ##### Traverse the MST
 
 `kruskalMST(...)` returns `{ edges, totalWeight }`. To traverse the MST like a graph, convert `edges` into an adjacency list:

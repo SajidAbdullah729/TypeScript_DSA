@@ -25,5 +25,6 @@ export {
   breadthFirstSearch,
   depthFirstSearch,
   connectedComponents,
+  dijkstra,
   kruskalMST,
 } from './graph.js';

@@ -48,6 +48,7 @@ export {
   breadthFirstSearch,
   depthFirstSearch,
   connectedComponents,
+  dijkstra,
   kruskalMST,
 } from './algorithms/index.js';
 export type { WeightedUndirectedEdge, RabinKarpTripleMods } from './algorithms/index.js';

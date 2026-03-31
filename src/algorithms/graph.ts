@@ -1,4 +1,5 @@
 import type { AdjacencyList, WeightedAdjacencyList } from '../collections/index.js';
+import { PriorityQueue } from '../collections/index.js';
 import { DisjointSetUnion } from './disjointSetUnion.js';
 
 /**
@@ -139,5 +140,56 @@ export function kruskalMST(
   }
 
   return { edges: mstEdges, totalWeight };
+}
+
+/**
+ * Dijkstra's single-source shortest paths on a weighted adjacency list with non-negative weights.
+ *
+ * Complexity: O((n + m) log m) with a binary heap priority queue.
+ *
+ * @returns
+ * - dist[v] = shortest distance from start to v (Infinity if unreachable)
+ * - prev[v] = previous vertex on the shortest path (or -1 if none)
+ */
+export function dijkstra(
+  n: number,
+  adj: WeightedAdjacencyList<number, number>,
+  start: number,
+  options?: { target?: number },
+): { dist: number[]; prev: number[] } {
+  const dist = Array<number>(n).fill(Number.POSITIVE_INFINITY);
+  const prev = Array<number>(n).fill(-1);
+  if (start < 0 || start >= n) return { dist, prev };
+
+  const target = options?.target;
+  dist[start] = 0;
+
+  type Node = { v: number; d: number };
+  // PriorityQueue is a max-heap by default; invert comparator to make it a min-heap by distance.
+  const pq = new PriorityQueue<Node>((a, b) => b.d - a.d);
+  pq.push({ v: start, d: 0 });
+
+  while (!pq.empty) {
+    const cur = pq.pop()!;
+    const u = cur.v;
+    const d = cur.d;
+    if (d !== dist[u]) continue; // stale entry
+    if (target !== undefined && u === target) break;
+
+    for (const e of adj[u] ?? []) {
+      const v = e.to;
+      const w = e.weight;
+      if (v < 0 || v >= n) continue;
+      if (w < 0) throw new RangeError('dijkstra: edge weights must be non-negative');
+      const nd = d + w;
+      if (nd < dist[v]) {
+        dist[v] = nd;
+        prev[v] = u;
+        pq.push({ v, d: nd });
+      }
+    }
+  }
+
+  return { dist, prev };
 }
 
