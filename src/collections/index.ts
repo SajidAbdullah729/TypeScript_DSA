@@ -10,5 +10,19 @@ export { UnorderedSet } from './UnorderedSet.js';
 export { OrderedMultiSet } from './OrderedMultiSet.js';
 export { OrderedMultiMap } from './OrderedMultiMap.js';
 export { RedBlackTree, RBNode } from './RedBlackTree.js';
+export {
+  GeneralSegmentTree,
+  SegmentTree,
+  SegmentTreeSum,
+  SegmentTreeMin,
+  SegmentTreeMax,
+  LazySegmentTreeSum,
+} from './SegmentTree.js';
+export type {
+  GeneralSegmentTreeConfig,
+  SegmentCombine,
+  SegmentLeafBuild,
+  SegmentMerge,
+} from './SegmentTree.js';
 export type { WeightedEdge, AdjacencyList, WeightedAdjacencyList } from './Graph.js';
 export { createAdjacencyList, createWeightedAdjacencyList, addEdge, deleteEdge } from './Graph.js';

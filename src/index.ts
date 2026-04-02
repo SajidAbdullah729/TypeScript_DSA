@@ -23,8 +23,22 @@ export {
   deleteEdge,
   createAdjacencyList,
   createWeightedAdjacencyList,
+  GeneralSegmentTree,
+  SegmentTree,
+  SegmentTreeSum,
+  SegmentTreeMin,
+  SegmentTreeMax,
+  LazySegmentTreeSum,
 } from './collections/index.js';
-export type { WeightedEdge, AdjacencyList, WeightedAdjacencyList } from './collections/index.js';
+export type {
+  WeightedEdge,
+  AdjacencyList,
+  WeightedAdjacencyList,
+  GeneralSegmentTreeConfig,
+  SegmentCombine,
+  SegmentLeafBuild,
+  SegmentMerge,
+} from './collections/index.js';
 export {
   sort,
   find,

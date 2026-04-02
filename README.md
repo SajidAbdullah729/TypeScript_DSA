@@ -2,7 +2,7 @@
 
 **This is the GitHub repository** for the npm package **[typescript-dsa-stl](https://www.npmjs.com/package/typescript-dsa-stl)**.
 
-STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, **Queue**, **List**, **PriorityQueue**, **OrderedMap** (Map), **UnorderedMap**, **OrderedSet** (Set), **UnorderedSet**, **OrderedMultiMap**, **OrderedMultiSet**, and algorithms (`sort`, `binarySearch`, `lowerBound`, `min`, `max`, **KnuthMorrisPratt**, **RabinKarp**, **StringRollingHash**, etc.). Install from npm to use in your project; this repo holds the source code.
+STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, **Queue**, **List**, **PriorityQueue**, **OrderedMap** (Map), **UnorderedMap**, **OrderedSet** (Set), **UnorderedSet**, **OrderedMultiMap**, **OrderedMultiSet**, **segment trees** (`SegmentTreeSum`, `SegmentTreeMin`, `SegmentTreeMax`, `SegmentTree`, `GeneralSegmentTree`, `LazySegmentTreeSum`), and algorithms (`sort`, `binarySearch`, `lowerBound`, `min`, `max`, **KnuthMorrisPratt**, **RabinKarp**, **StringRollingHash**, etc.). Install from npm to use in your project; this repo holds the source code.
 
 ---
 
@@ -521,14 +521,109 @@ console.log(a.substringHash(2, 2) === b.fullHash()); // true — both are "na"
 
 ---
 
+## Segment trees
+
+Segment trees support **range queries** and **point updates** in **O(log n)**. Range endpoints are **inclusive**: `query(l, r)` covers indices `l` through `r`.
+
+### Ready-made variants (`SegmentTreeSum`, `SegmentTreeMin`, `SegmentTreeMax`)
+
+```ts
+import {
+  SegmentTreeSum,
+  SegmentTreeMin,
+  SegmentTreeMax,
+} from 'typescript-dsa-stl';
+
+const sum = new SegmentTreeSum([1, 2, 3, 4]);
+console.log(sum.query(0, 3)); // 10
+sum.update(1, 10);
+console.log(sum.query(0, 3)); // 1 + 10 + 3 + 4 = 18
+
+const mn = new SegmentTreeMin([5, 2, 8, 1]);
+console.log(mn.query(0, 3)); // 1
+
+const mx = new SegmentTreeMax([5, 2, 8, 1]);
+console.log(mx.query(0, 3)); // 8
+```
+
+### Generic `SegmentTree<T>` (custom combine + neutral)
+
+Use the same type for array elements and aggregates. Pass an **associative** `combine` and a **neutral** value for query ranges that miss a segment (e.g. `0` for sum, `Infinity` for min).
+
+```ts
+import { SegmentTree } from 'typescript-dsa-stl';
+
+const gcdTree = new SegmentTree<number>(
+  [12, 18, 24],
+  (a, b) => {
+    let x = a;
+    let y = b;
+    while (y !== 0) {
+      const t = y;
+      y = x % y;
+      x = t;
+    }
+    return x;
+  },
+  0
+);
+console.log(gcdTree.query(0, 2)); // gcd(12, 18, 24) === 6
+
+// Non-numeric example: concatenate strings
+const strTree = new SegmentTree<string>(
+  ['a', 'b', 'c'],
+  (a, b) => a + b,
+  ''
+);
+console.log(strTree.query(0, 2)); // 'abc'
+```
+
+### `GeneralSegmentTree<T, V>` (custom merge + buildLeaf)
+
+Use when **raw** values `V` differ from the **aggregate** type `T`:
+
+- **`merge(left, right)`** — combine two child aggregates (internal nodes).
+- **`neutral`** — identity for `merge` when a query does not overlap a segment.
+- **`buildLeaf(value, index)`** — build the leaf from the raw array on initial construction and on every `update`.
+
+```ts
+import { GeneralSegmentTree } from 'typescript-dsa-stl';
+
+// Store sum of squares; raw array is plain numbers
+const st = new GeneralSegmentTree<number, number>([1, 2, 3], {
+  merge: (a, b) => a + b,
+  neutral: 0,
+  buildLeaf: (v, i) => v * v + i,
+});
+console.log(st.query(0, 2)); // (1+0) + (4+1) + (9+2) = 17
+st.update(1, 4);
+console.log(st.rawAt(1)); // 4 — current raw value at index 1
+```
+
+### `LazySegmentTreeSum` (range add + range sum)
+
+**`rangeAdd(l, r, delta)`** adds `delta` to every element in the inclusive range. **`rangeSum(l, r)`** returns the sum. **`set(i, value)`** assigns one position (lazy tags are applied along the path). All are **O(log n)**.
+
+```ts
+import { LazySegmentTreeSum } from 'typescript-dsa-stl';
+
+const lazy = new LazySegmentTreeSum([0, 0, 0, 0]);
+lazy.rangeAdd(1, 2, 5); // indices 1 and 2 get +5
+console.log(lazy.rangeSum(0, 3)); // 10
+lazy.set(0, 100);
+console.log(lazy.rangeSum(0, 3)); // 100 + 5 + 5 + 0
+```
+
+---
+
 ## API overview
 
 | Module | Exports |
 |--------|--------|
-| **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList`, `createAdjacencyList`, `createWeightedAdjacencyList`, `addEdge`, `deleteEdge` |
+| **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet`, `GeneralSegmentTree`, `SegmentTree`, `SegmentTreeSum`, `SegmentTreeMin`, `SegmentTreeMax`, `LazySegmentTreeSum`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList`, `createAdjacencyList`, `createWeightedAdjacencyList`, `addEdge`, `deleteEdge` |
 | **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition`, `DisjointSetUnion`, `KnuthMorrisPratt`, `RabinKarp`, `RABIN_KARP_DEFAULT_MODS`, `StringRollingHash`, `breadthFirstSearch`, `depthFirstSearch`, `connectedComponents`, `kruskalMST` |
 | **Utils** | `clamp`, `range`, `noop`, `identity`, `swap` |
-| **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray`, `RabinKarpTripleMods` |
+| **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray`, `RabinKarpTripleMods`, `GeneralSegmentTreeConfig`, `SegmentCombine`, `SegmentMerge`, `SegmentLeafBuild` |
 
 ### Subpath imports (tree-shaking)
 
@@ -559,6 +654,13 @@ import type { Comparator } from 'typescript-dsa-stl/types';
 
 \* Amortized (hash).  
 \** At a known node.
+
+### Segment trees (range queries)
+
+| Structure | Build | Point update | Range query | Extra |
+|-----------|-------|--------------|-------------|--------|
+| **GeneralSegmentTree**, **SegmentTree**, **SegmentTreeSum** / **Min** / **Max** | O(n) | O(log n) | O(log n) | Inclusive `[l, r]`; **GeneralSegmentTree** keeps raw `V` and uses `merge` + `buildLeaf` |
+| **LazySegmentTreeSum** | O(n) | `set`: O(log n) | `rangeSum`: O(log n) | `rangeAdd` on a range: O(log n) |
 
 ---
 
