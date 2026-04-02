@@ -1,6 +1,6 @@
 {
   "name": "typescript-dsa-stl",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "STL-style data structures and algorithms for TypeScript: Vector, Stack, Queue, List, PriorityQueue, Map, Set, sort, binarySearch, graph utilities. Use like C++ STL.",
   "type": "module",
   "main": "dist/index.js",

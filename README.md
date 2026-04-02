@@ -614,6 +614,69 @@ lazy.set(0, 100);
 console.log(lazy.rangeSum(0, 3)); // 100 + 5 + 5 + 0
 ```
 
+### Real-world use cases
+
+These patterns show up in backends and internal tools when you need **many** range queries and updates on a fixed sequence (length known up front), without scanning the whole array each time.
+
+#### 1. Analytics or reporting: totals over a time window (with corrections)
+
+Each index is a **fixed bucket** (hour of day, day of month, version slot, etc.). You repeatedly ask “what is the **sum** from bucket `a` through `b`?” and sometimes **fix one bucket** after late data or a reconciliation.
+
+```ts
+import { SegmentTreeSum } from 'typescript-dsa-stl';
+
+/** Revenue (or events, page views, API calls) per calendar day; index 0 = first day of period. */
+class PeriodMetrics {
+  private readonly tree: SegmentTreeSum;
+
+  constructor(dailyValues: readonly number[]) {
+    this.tree = new SegmentTreeSum(dailyValues);
+  }
+
+  /** Total for an inclusive day range — e.g. chart drill-down or export row. */
+  totalBetweenDay(firstDayIndex: number, lastDayIndex: number): number {
+    return this.tree.query(firstDayIndex, lastDayIndex);
+  }
+
+  /** Backfill or correct one day without rebuilding the whole series. */
+  setDay(dayIndex: number, amount: number): void {
+    this.tree.update(dayIndex, amount);
+  }
+}
+
+const january = new PeriodMetrics([1200, 980, 1100, 1050, 1300]);
+console.log(january.totalBetweenDay(0, 4)); // full period
+january.setDay(2, 1150); // corrected day 2
+console.log(january.totalBetweenDay(1, 3)); // sum over days 1..3
+```
+
+In production you would usually **persist** the underlying series in a database and **rebuild** the tree when the period reloads; the tree stays useful in memory for dashboards, simulations, or request handlers that see heavy read/update traffic on the same window.
+
+#### 2. Operations or finance: bulk adjustment on a slice, then aggregate
+
+You apply the **same delta** to **every** element in an index range (tiered bonuses, prorated credits, simulation shocks), then need **range sums** for reporting. A lazy sum tree avoids touching each cell one by one.
+
+```ts
+import { LazySegmentTreeSum } from 'typescript-dsa-stl';
+
+/** Example: per-seat or per-row amounts; apply a flat bonus to ranks 10–50 (0-based 9..49), then sum a sub-range for a sub-team. */
+function simulateBulkBonusAndSubtotal(seatCount: number): void {
+  // Initial per-seat values (e.g. base commission), built once
+  const base = Array.from({ length: seatCount }, (_, i) => 100 + i);
+  const amounts = new LazySegmentTreeSum(base);
+
+  // HR: +250 to everyone in seats 10–50 inclusive (indices 9..49)
+  amounts.rangeAdd(9, 49, 250);
+
+  // Finance: subtotal for seats 20–30 only
+  console.log(amounts.rangeSum(19, 29));
+}
+
+simulateBulkBonusAndSubtotal(100);
+```
+
+The same idea applies to **inventory deltas** across bin ranges, **loyalty points** batch credits by user-ID band (when IDs map to contiguous indices), or **game/simulation** state where many cells gain the same buff and you query partial totals.
+
 ---
 
 ## API overview
