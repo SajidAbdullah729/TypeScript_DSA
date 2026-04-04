@@ -1,6 +1,7 @@
 export { Vector } from './Vector.js';
 export { Stack } from './Stack.js';
 export { Queue } from './Queue.js';
+export { Deque } from './Deque.js';
 export { List, ListNode } from './List.js';
 export { PriorityQueue } from './PriorityQueue.js';
 export { OrderedMap } from './OrderedMap.js';

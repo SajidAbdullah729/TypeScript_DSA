@@ -10,6 +10,7 @@ export {
   Vector,
   Stack,
   Queue,
+  Deque,
   List,
   ListNode,
   PriorityQueue,
