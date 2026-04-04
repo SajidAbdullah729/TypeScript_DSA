@@ -2,7 +2,7 @@
 
 **This is the GitHub repository** for the npm package **[typescript-dsa-stl](https://www.npmjs.com/package/typescript-dsa-stl)**.
 
-STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, **Queue**, **List**, **PriorityQueue**, **OrderedMap** (Map), **UnorderedMap**, **OrderedSet** (Set), **UnorderedSet**, **OrderedMultiMap**, **OrderedMultiSet**, **segment trees** (`SegmentTreeSum`, `SegmentTreeMin`, `SegmentTreeMax`, `SegmentTree`, `GeneralSegmentTree`, `LazySegmentTreeSum`), and algorithms (`sort`, `binarySearch`, `lowerBound`, `min`, `max`, **KnuthMorrisPratt**, **RabinKarp**, **StringRollingHash**, etc.). Install from npm to use in your project; this repo holds the source code.
+STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, **Queue**, **Deque**, **List**, **PriorityQueue**, **OrderedMap** (Map), **UnorderedMap**, **OrderedSet** (Set), **UnorderedSet**, **OrderedMultiMap**, **OrderedMultiSet**, **segment trees** (`SegmentTreeSum`, `SegmentTreeMin`, `SegmentTreeMax`, `SegmentTree`, `GeneralSegmentTree`, `LazySegmentTreeSum`), and algorithms (`sort`, `binarySearch`, `lowerBound`, `min`, `max`, **KnuthMorrisPratt**, **RabinKarp**, **StringRollingHash**, etc.). Install from npm to use in your project; this repo holds the source code.
 
 ---
 
@@ -21,6 +21,7 @@ import {
   Vector,
   Stack,
   Queue,
+  Deque,
   List,
   PriorityQueue,
   OrderedMap,
@@ -52,6 +53,15 @@ const queue = new Queue<number>();
 queue.enqueue(1);
 queue.enqueue(2);
 console.log(queue.front()); // 1
+
+// Deque — double-ended queue (like C++ std::deque): O(1) both ends + O(1) index access
+const deque = new Deque<number>();
+deque.pushBack(2);
+deque.pushFront(1);
+deque.pushBack(3);
+console.log(deque.front()); // 1
+console.log(deque.back()); // 3
+console.log(deque.at(1)); // 2
 
 const list = new List<number>();
 list.pushBack(10);
@@ -100,6 +110,30 @@ upperBound(sorted, 4);   // 4
 // Utils
 clamp(42, 0, 10);       // 10
 range(0, 5);            // [0, 1, 2, 3, 4]
+```
+
+### Deque (like C++ `std::deque`)
+
+A **double-ended queue**: amortized **O(1)** `pushFront` / `pushBack` / `popFront` / `popBack`, and **O(1)** random access via `at` / `set`. Implemented as a growable circular buffer (same asymptotics as a typical `std::deque` for these operations).
+
+| C++ | TypeScript |
+|-----|------------|
+| `push_front` | `pushFront` |
+| `push_back` | `pushBack` |
+| `pop_front` | `popFront` |
+| `pop_back` | `popBack` |
+| `front` / `back` | `front()` / `back()` |
+| `operator[]` / `at` | `at(i)` / `set(i, value)` |
+| `size` / `empty` | `size` / `empty` |
+| — | `capacity`, `reserve`, `shrinkToFit`, `toArray()`, iterator |
+
+```ts
+import { Deque } from 'typescript-dsa-stl';
+
+const d = new Deque<number>([1, 2, 3]); // copy initial elements, or `new Deque()` / `new Deque(64)` for capacity hint
+d.pushFront(0);
+d.popBack();
+console.log(d.toArray()); // [0, 1, 2]
 ```
 
 ### 2D and 3D vectors (like C++ `vector<vector<int>>`)
@@ -683,7 +717,7 @@ The same idea applies to **inventory deltas** across bin ranges, **loyalty point
 
 | Module | Exports |
 |--------|--------|
-| **Collections** | `Vector`, `Stack`, `Queue`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet`, `GeneralSegmentTree`, `SegmentTree`, `SegmentTreeSum`, `SegmentTreeMin`, `SegmentTreeMax`, `LazySegmentTreeSum`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList`, `createAdjacencyList`, `createWeightedAdjacencyList`, `addEdge`, `deleteEdge` |
+| **Collections** | `Vector`, `Stack`, `Queue`, `Deque`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet`, `GeneralSegmentTree`, `SegmentTree`, `SegmentTreeSum`, `SegmentTreeMin`, `SegmentTreeMax`, `LazySegmentTreeSum`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList`, `createAdjacencyList`, `createWeightedAdjacencyList`, `addEdge`, `deleteEdge` |
 | **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition`, `DisjointSetUnion`, `KnuthMorrisPratt`, `RabinKarp`, `RABIN_KARP_DEFAULT_MODS`, `StringRollingHash`, `breadthFirstSearch`, `depthFirstSearch`, `connectedComponents`, `kruskalMST` |
 | **Utils** | `clamp`, `range`, `noop`, `identity`, `swap` |
 | **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray`, `RabinKarpTripleMods`, `GeneralSegmentTreeConfig`, `SegmentCombine`, `SegmentMerge`, `SegmentLeafBuild` |
@@ -691,7 +725,7 @@ The same idea applies to **inventory deltas** across bin ranges, **loyalty point
 ### Subpath imports (tree-shaking)
 
 ```ts
-import { Vector, Stack } from 'typescript-dsa-stl/collections';
+import { Vector, Stack, Queue, Deque } from 'typescript-dsa-stl/collections';
 import { sort, binarySearch, breadthFirstSearch, depthFirstSearch, KnuthMorrisPratt, RabinKarp, StringRollingHash } from 'typescript-dsa-stl/algorithms';
 import { clamp, range } from 'typescript-dsa-stl/utils';
 import type { Comparator } from 'typescript-dsa-stl/types';
@@ -706,6 +740,7 @@ import type { Comparator } from 'typescript-dsa-stl/types';
 | **Vector** | O(1) | O(1)* | O(n) | O(1) | O(n) |
 | **Stack** | — | O(1) | — | O(1) | — |
 | **Queue** | — | O(1)* | — | O(1)* | — |
+| **Deque** | O(1) | O(1)* (front/back) | — | O(1)* (front/back) | — |
 | **List** | O(n) | O(1) | O(1)** | O(1) | O(1)** |
 | **PriorityQueue** | — | O(log n) | — | O(log n) | — |
 | **OrderedMap** (Map) | O(log n) get | O(log n) set | — | O(log n) delete | — |
