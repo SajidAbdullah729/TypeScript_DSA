@@ -327,7 +327,18 @@ for (const [key, value] of index) {
 
 ### Segment tree overview and complexity
 
+A segment tree is an indexable array backed by a tree so **range questions** (sum, min, max, or your own combine) and **updates** cost **O(log n)** instead of scanning the whole slice.
+
 Segment trees support **range queries** and **point updates** in **O(log n)**. Range endpoints are **inclusive**: `query(l, r)` covers indices `l` through `r`.
+
+**What each type does:**
+
+| Type | Does |
+|------|------|
+| **SegmentTreeSum** / **Min** / **Max** | Fixed numeric range **sum**, **min**, or **max** with **one index updated at a time**. |
+| **SegmentTree** (generic) | Your own **associative** combine over ranges; same type for array entries and node values. |
+| **GeneralSegmentTree** | Array stores raw **V**, nodes hold a summary **T** built with **merge** and **buildLeaf**. |
+| **LazySegmentTreeSum** | **Add the same delta to a whole range**, optional **single-cell set**, and **range sum** (lazy tags). |
 
 | Structure | Build | Point update | Range query | Extra |
 |-----------|-------|--------------|-------------|--------|
@@ -336,7 +347,11 @@ Segment trees support **range queries** and **point updates** in **O(log n)**. R
 
 ### Segment tree: Sum, Min, Max and example
 
-`SegmentTreeSum`, `SegmentTreeMin`, and `SegmentTreeMax` are fixed implementations for numeric arrays: build from initial values, **`update(i, value)`** for a single index, **`query(l, r)`** for an inclusive range.
+- **`SegmentTreeSum`** — answers “what is the **sum** from `l` to `r`?” after you **`update(i, value)`** on one index.
+- **`SegmentTreeMin`** — answers “what is the **minimum** in `[l, r]`?” after single-index updates.
+- **`SegmentTreeMax`** — answers “what is the **maximum** in `[l, r]`?” after single-index updates.
+
+Together they are fixed numeric implementations: build from initial values, **`update(i, value)`** for one index, **`query(l, r)`** for an inclusive range.
 
 ```ts
 import {
@@ -391,7 +406,7 @@ In production you would usually **persist** the underlying series in a database 
 
 ### Generic SegmentTree
 
-Use **`SegmentTree<T>`** when element type and aggregate type are the same. Pass an **associative** `combine` and a **neutral** value for query ranges that miss a segment (e.g. `0` for sum, `Infinity` for min).
+**`SegmentTree<T>`** supports range queries for **any associative operation** (gcd, concatenation, bitwise OR, …) on a fixed-length array, with **point updates**, when element type and aggregate type are the same — pass an **associative** `combine` and a **neutral** value for query ranges that miss a segment (e.g. `0` for sum, `Infinity` for min).
 
 ```ts
 import { SegmentTree } from 'typescript-dsa-stl';
@@ -423,7 +438,9 @@ console.log(strTree.query(0, 2)); // 'abc'
 
 ### GeneralSegmentTree
 
-Use **`GeneralSegmentTree<T, V>`** when **raw** values `V` differ from the **aggregate** type `T`:
+**`GeneralSegmentTree<T, V>`** keeps **raw** values of type **V** in the array while each segment stores a **different** summary type **T** (e.g. raw numbers in the array, but nodes keep sums of squares or custom stats).
+
+You supply:
 
 - **`merge(left, right)`** — combine two child aggregates (internal nodes).
 - **`neutral`** — identity for `merge` when a query does not overlap a segment.
@@ -444,6 +461,8 @@ console.log(st.rawAt(1)); // 4 — current raw value at index 1
 ```
 
 ### LazySegmentTreeSum and example
+
+**`LazySegmentTreeSum`** maintains a numeric array where you can **add a constant to every element in a range**, **overwrite one cell**, and query **range sums** — all in **O(log n)** via lazy propagation (unlike the trees above, which only support point updates).
 
 **`rangeAdd(l, r, delta)`** adds `delta` to every element in the inclusive range. **`rangeSum(l, r)`** returns the sum. **`set(i, value)`** assigns one position (lazy tags are applied along the path). All are **O(log n)** — see the complexity table in the overview above.
 
