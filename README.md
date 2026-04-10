@@ -2,7 +2,7 @@
 
 **Repository** for the npm package **[typescript-dsa-stl](https://www.npmjs.com/package/typescript-dsa-stl)** · [GitHub](https://github.com/SajidAbdullah729/TypeScript_DSA)
 
-STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, **Queue**, **Deque**, **List**, **PriorityQueue**, ordered/unordered **Map** and **Set**, **OrderedMultiMap** / **OrderedMultiSet**, **segment trees**, **graph** helpers (BFS, DFS, Dijkstra, Kruskal, DSU), and **string** algorithms (KMP, Rabin–Karp, rolling hash). Install from npm for your app; this repo is the source.
+STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, **Queue**, **Deque**, **List**, **PriorityQueue**, ordered/unordered **Map** and **Set**, **OrderedMultiMap** / **OrderedMultiSet**, **segment trees**, **graph** helpers (BFS, DFS, topological sort, Dijkstra, Kruskal, DSU), and **string** algorithms (KMP, Rabin–Karp, rolling hash). Install from npm for your app; this repo is the source.
 
 ---
 
@@ -17,7 +17,7 @@ STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, 
 | [Complexity](#complexity) | Big-O for collections |
 | [Collections](#collections) | Deque, nested vectors, multi-map / multi-set |
 | [Segment trees](#segment-trees) | Overview, variants, and examples (one section) |
-| [Graph algorithms](#graph-algorithms) | Adjacency lists, BFS/DFS, components, MST, shortest paths |
+| [Graph algorithms](#graph-algorithms) | Adjacency lists, BFS/DFS, topological sort, components, MST, shortest paths |
 | [String algorithms](#string-algorithms) | KMP, Rabin–Karp, rolling hash |
 | [For maintainers](#for-maintainers) | Build and publish |
 | [License](#license) | MIT |
@@ -45,6 +45,8 @@ import {
   binarySearch,
   breadthFirstSearch,
   depthFirstSearch,
+  topologicalSortStack,
+  topologicalSortIndegree,
   KnuthMorrisPratt,
   RabinKarp,
   StringRollingHash,
@@ -164,15 +166,15 @@ range(0, 5);            // [0, 1, 2, 3, 4]
 | Area | Exports |
 |------|---------|
 | **Collections** | `Vector`, `Stack`, `Queue`, `Deque`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet`, `GeneralSegmentTree`, `SegmentTree`, `SegmentTreeSum`, `SegmentTreeMin`, `SegmentTreeMax`, `LazySegmentTreeSum`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList`, `createAdjacencyList`, `createWeightedAdjacencyList`, `addEdge`, `deleteEdge` |
-| **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition`, `DisjointSetUnion`, `KnuthMorrisPratt`, `RabinKarp`, `RABIN_KARP_DEFAULT_MODS`, `StringRollingHash`, `breadthFirstSearch`, `depthFirstSearch`, `connectedComponents`, `kruskalMST`, `dijkstra`, `reconstructPath` |
+| **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition`, `DisjointSetUnion`, `KnuthMorrisPratt`, `RabinKarp`, `RABIN_KARP_DEFAULT_MODS`, `StringRollingHash`, `breadthFirstSearch`, `depthFirstSearch`, `topologicalSortStack`, `topologicalSortIndegree`, `connectedComponents`, `kruskalMST`, `dijkstra`, `reconstructPath` |
 | **Utils** | `clamp`, `range`, `noop`, `identity`, `swap` |
-| **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray`, `RabinKarpTripleMods`, `WeightedUndirectedEdge`, `GeneralSegmentTreeConfig`, `SegmentCombine`, `SegmentMerge`, `SegmentLeafBuild` |
+| **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray`, `RabinKarpTripleMods`, `WeightedUndirectedEdge`, `TopologicalSortResult`, `GeneralSegmentTreeConfig`, `SegmentCombine`, `SegmentMerge`, `SegmentLeafBuild` |
 
 ### Subpath imports (tree-shaking)
 
 ```ts
 import { Vector, Stack, Queue, Deque } from 'typescript-dsa-stl/collections';
-import { sort, binarySearch, breadthFirstSearch, depthFirstSearch, KnuthMorrisPratt, RabinKarp, StringRollingHash } from 'typescript-dsa-stl/algorithms';
+import { sort, binarySearch, breadthFirstSearch, depthFirstSearch, topologicalSortStack, topologicalSortIndegree, KnuthMorrisPratt, RabinKarp, StringRollingHash } from 'typescript-dsa-stl/algorithms';
 import { clamp, range } from 'typescript-dsa-stl/utils';
 import type { Comparator } from 'typescript-dsa-stl/types';
 ```
@@ -660,6 +662,44 @@ console.log(breadthFirstSearch(5, withIsolated, 0)); // [0, 1] — not [0,1,2,3,
 - **Directed graphs:** only list outgoing edges in `adj[u]`; traversal follows arcs from `start`.
 - **Disconnected graphs:** run again from another unvisited `start`, or use `connectedComponents` to enumerate components first.
 - **Weighted graphs:** for traversal ignoring weights, use the same vertex lists as the unweighted graph (weights are ignored by these two functions).
+
+### Topological sort
+
+`topologicalSortStack` (iterative DFS / finish order) and `topologicalSortIndegree` (Kahn’s algorithm, zero-indegree queue) both take `n` and a **directed** unweighted `AdjacencyList`. They return `{ order, ok }`: a permutation of `0..n-1` when `ok` is true, or failure when a directed cycle exists.
+
+**When to use**
+
+- **Task / build / dependency ordering:** items must happen only after their prerequisites (package install order, compile steps, course prerequisites).
+- **Scheduling under precedence constraints:** jobs with “A before B” rules and no cycles.
+- **Detecting cycles in a directed model:** if `ok` is false, the graph (on valid vertices `0..n-1`) is not a DAG.
+- **Pick either algorithm:** both answer the same yes/no; choose **stack** if you want DFS-style behavior and an explicit stack; choose **indegree** (Kahn) if you prefer peeling sources level-by-level (often closer to “ready queue” mental models).
+
+**When topological order is not possible**
+
+- Any **directed cycle** (including a **self-loop**): `ok` is false.
+- **Undirected** graphs modeled with **both** `u → v` and `v → u`: that is a 2-cycle, so **not** a DAG unless you only use directed edges that reflect real precedence.
+
+**Example (DAG)**
+
+```ts
+import {
+  createAdjacencyList,
+  addEdge,
+  topologicalSortStack,
+  topologicalSortIndegree,
+} from 'typescript-dsa-stl';
+
+const n = 4;
+const g = createAdjacencyList(n);
+addEdge(g, 0, 1);
+addEdge(g, 0, 2);
+addEdge(g, 1, 3);
+addEdge(g, 2, 3);
+
+const a = topologicalSortStack(n, g);
+const b = topologicalSortIndegree(n, g);
+// a.ok === true, b.ok === true; order arrays are valid topsorts (may differ)
+```
 
 ### Disjoint Set Union (Union-Find)
 

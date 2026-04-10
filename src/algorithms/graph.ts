@@ -70,6 +70,128 @@ export function depthFirstSearch(
   return order;
 }
 
+/**
+ * Result of a topological sort attempt on vertices `0..n-1`.
+ *
+ * **When sorting is impossible:** classical topological order exists only for a **directed acyclic graph (DAG)**.
+ * If the graph has any **directed cycle** (including a **self-loop**), both algorithms set `ok` to `false`.
+ * Treating an **undirected** edge as two opposite directed arcs creates a 2-cycle, so `ok` will be `false`
+ * unless there are no such pairs (e.g. only isolated vertices).
+ *
+ * **Input:** You must pass **`n` and `adj` together** — `n` is the number of vertices, and `adj[u]` lists **out-neighbors**
+ * of `u` for a **directed** graph. Missing `adj[u]` is treated as no outgoing edges. Neighbors outside `0..n-1` are **ignored**,
+ * so the result reflects that pruned graph, not raw adjacency data with invalid indices.
+ */
+export interface TopologicalSortResult {
+  /** A permutation of `0..n-1` with every edge `u → v` having `u` before `v` (only valid when `ok` is true). */
+  order: number[];
+  /** `true` iff a topological order exists for the directed graph on `0..n-1` after ignoring invalid neighbors. */
+  ok: boolean;
+}
+
+type TopoFrame = { u: number; i: number };
+
+/**
+ * Topological ordering of a **directed** graph using an explicit stack (iterative DFS / finish times).
+ * Pushes a vertex after all its outgoing edges have been explored, then reverses that list.
+ *
+ * Complexity: O(n + m) time, O(n) extra space.
+ *
+ * **Inputs:** Same as other graph helpers: vertex count `n` and unweighted `adj` (outgoing edges only). This pair **is** the
+ * graph representation here; there is no separate graph object. Keep `n` consistent with how many vertices you number (`0..n-1`).
+ *
+ * **Not possible:** Returns `{ order: [], ok: false }` if a directed cycle is found (self-loop, longer cycle, or bidirectional
+ * undirected modeling). Returns `{ order, ok: true }` for any DAG, including disconnected ones.
+ *
+ * - Invalid neighbor indices are skipped (see {@link TopologicalSortResult}).
+ * - Parallel edges behave like multiple arcs; self-loops are cycles.
+ */
+export function topologicalSortStack(
+  n: number,
+  adj: AdjacencyList<number>,
+): TopologicalSortResult {
+  const state = new Uint8Array(n); // 0 = unvisited, 1 = on stack (visiting), 2 = done
+  const finish: number[] = [];
+  const stack: TopoFrame[] = [];
+
+  for (let s = 0; s < n; s++) {
+    if (state[s] !== 0) continue;
+    state[s] = 1;
+    stack.push({ u: s, i: 0 });
+    while (stack.length > 0) {
+      const top = stack[stack.length - 1]!;
+      const u = top.u;
+      const neighbors = adj[u] ?? [];
+      let pushedChild = false;
+      while (top.i < neighbors.length) {
+        const v = neighbors[top.i]!;
+        top.i++;
+        if (v < 0 || v >= n) continue;
+        if (state[v] === 1) return { order: [], ok: false };
+        if (state[v] === 0) {
+          state[v] = 1;
+          stack.push({ u: v, i: 0 });
+          pushedChild = true;
+          break;
+        }
+      }
+      if (!pushedChild) {
+        stack.pop();
+        state[u] = 2;
+        finish.push(u);
+      }
+    }
+  }
+
+  finish.reverse();
+  return { order: finish, ok: true };
+}
+
+/**
+ * Topological ordering via **Kahn's algorithm**: repeatedly remove vertices with indegree zero (BFS-style).
+ * Uses only indegrees derived from `adj`; outdegree is implicit in the lists.
+ *
+ * Complexity: O(n + m) time, O(n) extra space.
+ *
+ * **Inputs:** Requires `n` and `adj` together (directed out-edges per vertex), like {@link topologicalSortStack}.
+ *
+ * **Not possible:** `ok` is `false` when not all vertices are output — equivalently, when the graph on `0..n-1` (after ignoring
+ * invalid neighbors) contains a directed cycle. On failure, `order` lists some vertices in a valid partial order but must not
+ * be treated as a full topological sort.
+ *
+ * - When `ok` is `true`, `order` is one valid topological order; it may differ from the stack/DFS-based order.
+ */
+export function topologicalSortIndegree(
+  n: number,
+  adj: AdjacencyList<number>,
+): TopologicalSortResult {
+  const indeg = new Uint32Array(n);
+  for (let u = 0; u < n; u++) {
+    for (const v of adj[u] ?? []) {
+      if (v >= 0 && v < n) indeg[v]++;
+    }
+  }
+
+  const q: number[] = [];
+  for (let i = 0; i < n; i++) {
+    if (indeg[i] === 0) q.push(i);
+  }
+
+  const order: number[] = [];
+  let qh = 0;
+  while (qh < q.length) {
+    const u = q[qh++]!;
+    order.push(u);
+    for (const v of adj[u] ?? []) {
+      if (v < 0 || v >= n) continue;
+      indeg[v]--;
+      if (indeg[v] === 0) q.push(v);
+    }
+  }
+
+  return { order, ok: order.length === n };
+}
+
 export interface WeightedUndirectedEdge {
   u: number;
   v: number;

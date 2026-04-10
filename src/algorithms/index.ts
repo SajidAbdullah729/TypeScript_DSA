@@ -20,10 +20,12 @@ export { KnuthMorrisPratt } from './kmp.js';
 export { StringRollingHash } from './stringHashing.js';
 export { RabinKarp, RABIN_KARP_DEFAULT_MODS } from './rabinKarp.js';
 export type { RabinKarpTripleMods } from './rabinKarp.js';
-export type { WeightedUndirectedEdge } from './graph.js';
+export type { WeightedUndirectedEdge, TopologicalSortResult } from './graph.js';
 export {
   breadthFirstSearch,
   depthFirstSearch,
+  topologicalSortStack,
+  topologicalSortIndegree,
   connectedComponents,
   dijkstra,
   reconstructPath,
