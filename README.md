@@ -14,9 +14,9 @@ STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, 
 | [Package layout & imports](#package-layout--imports) | Barrel vs subpaths (tree-shaking) |
 | [Quick start](#quick-start) | One file showing main APIs |
 | [API reference](#api-reference) | Export tables |
-| [Complexity](#complexity) | Big-O for collections and segment trees |
+| [Complexity](#complexity) | Big-O for collections (segment trees: [below](#segment-tree-overview-and-complexity)) |
 | [Collections](#collections) | Deque, nested vectors, multi-map / multi-set |
-| [Segment trees](#segment-trees) | Sum/min/max, generic, lazy |
+| [Segment trees](#segment-trees) | [Overview & complexity](#segment-tree-overview-and-complexity) · [Sum / Min / Max + example](#segment-tree-sum-min-max-and-example) · [Generic SegmentTree](#generic-segmenttree) · [GeneralSegmentTree](#generalsegmenttree) · [LazySegmentTreeSum + example](#lazysegmenttreesum-and-example) |
 | [Graph algorithms](#graph-algorithms) | Adjacency lists, BFS/DFS, components, MST, shortest paths |
 | [String algorithms](#string-algorithms) | KMP, Rabin–Karp, rolling hash |
 | [For maintainers](#for-maintainers) | Build and publish |
@@ -201,12 +201,7 @@ import type { Comparator } from 'typescript-dsa-stl/types';
 \* Amortized (hash).  
 \** At a known node.
 
-### Segment trees
-
-| Structure | Build | Point update | Range query | Extra |
-|-----------|-------|--------------|-------------|--------|
-| **GeneralSegmentTree**, **SegmentTree**, **SegmentTreeSum** / **Min** / **Max** | O(n) | O(log n) | O(log n) | Inclusive `[l, r]`; **GeneralSegmentTree** keeps raw `V` and uses `merge` + `buildLeaf` |
-| **LazySegmentTreeSum** | O(n) | `set`: O(log n) | `rangeSum`: O(log n) | `rangeAdd` on a range: O(log n) |
+Segment-tree time and space behaviour is summarized in [Segment tree overview and complexity](#segment-tree-overview-and-complexity) (same section as the usage examples).
 
 ---
 
@@ -330,9 +325,20 @@ for (const [key, value] of index) {
 
 ## Segment trees
 
+**In this section:** [Overview & complexity](#segment-tree-overview-and-complexity) · [Sum / Min / Max + example](#segment-tree-sum-min-max-and-example) · [Generic SegmentTree](#generic-segmenttree) · [GeneralSegmentTree](#generalsegmenttree) · [LazySegmentTreeSum + example](#lazysegmenttreesum-and-example)
+
+### Segment tree overview and complexity
+
 Segment trees support **range queries** and **point updates** in **O(log n)**. Range endpoints are **inclusive**: `query(l, r)` covers indices `l` through `r`.
 
-### Ready-made variants (`SegmentTreeSum`, `SegmentTreeMin`, `SegmentTreeMax`)
+| Structure | Build | Point update | Range query | Extra |
+|-----------|-------|--------------|-------------|--------|
+| **GeneralSegmentTree**, **SegmentTree**, **SegmentTreeSum** / **Min** / **Max** | O(n) | O(log n) | O(log n) | Inclusive `[l, r]`; **GeneralSegmentTree** keeps raw `V` and uses `merge` + `buildLeaf` |
+| **LazySegmentTreeSum** | O(n) | `set`: O(log n) | `rangeSum`: O(log n) | `rangeAdd` on a range: O(log n) |
+
+### Segment tree: Sum, Min, Max and example
+
+`SegmentTreeSum`, `SegmentTreeMin`, and `SegmentTreeMax` are fixed implementations for numeric arrays: build from initial values, **`update(i, value)`** for a single index, **`query(l, r)`** for an inclusive range.
 
 ```ts
 import {
@@ -353,81 +359,7 @@ const mx = new SegmentTreeMax([5, 2, 8, 1]);
 console.log(mx.query(0, 3)); // 8
 ```
 
-### Generic `SegmentTree<T>` (custom combine + neutral)
-
-Use the same type for array elements and aggregates. Pass an **associative** `combine` and a **neutral** value for query ranges that miss a segment (e.g. `0` for sum, `Infinity` for min).
-
-```ts
-import { SegmentTree } from 'typescript-dsa-stl';
-
-const gcdTree = new SegmentTree<number>(
-  [12, 18, 24],
-  (a, b) => {
-    let x = a;
-    let y = b;
-    while (y !== 0) {
-      const t = y;
-      y = x % y;
-      x = t;
-    }
-    return x;
-  },
-  0
-);
-console.log(gcdTree.query(0, 2)); // gcd(12, 18, 24) === 6
-
-// Non-numeric example: concatenate strings
-const strTree = new SegmentTree<string>(
-  ['a', 'b', 'c'],
-  (a, b) => a + b,
-  ''
-);
-console.log(strTree.query(0, 2)); // 'abc'
-```
-
-### `GeneralSegmentTree<T, V>` (custom merge + buildLeaf)
-
-Use when **raw** values `V` differ from the **aggregate** type `T`:
-
-- **`merge(left, right)`** — combine two child aggregates (internal nodes).
-- **`neutral`** — identity for `merge` when a query does not overlap a segment.
-- **`buildLeaf(value, index)`** — build the leaf from the raw array on initial construction and on every `update`.
-
-```ts
-import { GeneralSegmentTree } from 'typescript-dsa-stl';
-
-// Store sum of squares; raw array is plain numbers
-const st = new GeneralSegmentTree<number, number>([1, 2, 3], {
-  merge: (a, b) => a + b,
-  neutral: 0,
-  buildLeaf: (v, i) => v * v + i,
-});
-console.log(st.query(0, 2)); // (1+0) + (4+1) + (9+2) = 17
-st.update(1, 4);
-console.log(st.rawAt(1)); // 4 — current raw value at index 1
-```
-
-### `LazySegmentTreeSum` (range add + range sum)
-
-**`rangeAdd(l, r, delta)`** adds `delta` to every element in the inclusive range. **`rangeSum(l, r)`** returns the sum. **`set(i, value)`** assigns one position (lazy tags are applied along the path). All are **O(log n)**.
-
-```ts
-import { LazySegmentTreeSum } from 'typescript-dsa-stl';
-
-const lazy = new LazySegmentTreeSum([0, 0, 0, 0]);
-lazy.rangeAdd(1, 2, 5); // indices 1 and 2 get +5
-console.log(lazy.rangeSum(0, 3)); // 10
-lazy.set(0, 100);
-console.log(lazy.rangeSum(0, 3)); // 100 + 5 + 5 + 0
-```
-
-### Real-world use cases
-
-These patterns show up in backends and internal tools when you need **many** range queries and updates on a fixed sequence (length known up front), without scanning the whole array each time.
-
-#### 1. Analytics or reporting: totals over a time window (with corrections)
-
-Each index is a **fixed bucket** (hour of day, day of month, version slot, etc.). You repeatedly ask “what is the **sum** from bucket `a` through `b`?” and sometimes **fix one bucket** after late data or a reconciliation.
+**Example — analytics / reporting (fixed buckets, range totals, single-day corrections):** each index is a **fixed bucket** (hour, day, version slot, …). You ask for the **sum** from bucket `a` through `b` and sometimes **fix one bucket** after late data or reconciliation — same API as above, wrapped for clarity.
 
 ```ts
 import { SegmentTreeSum } from 'typescript-dsa-stl';
@@ -459,9 +391,75 @@ console.log(january.totalBetweenDay(1, 3)); // sum over days 1..3
 
 In production you would usually **persist** the underlying series in a database and **rebuild** the tree when the period reloads; the tree stays useful in memory for dashboards, simulations, or request handlers that see heavy read/update traffic on the same window.
 
-#### 2. Operations or finance: bulk adjustment on a slice, then aggregate
+### Generic SegmentTree
 
-You apply the **same delta** to **every** element in an index range (tiered bonuses, prorated credits, simulation shocks), then need **range sums** for reporting. A lazy sum tree avoids touching each cell one by one.
+Use **`SegmentTree<T>`** when element type and aggregate type are the same. Pass an **associative** `combine` and a **neutral** value for query ranges that miss a segment (e.g. `0` for sum, `Infinity` for min).
+
+```ts
+import { SegmentTree } from 'typescript-dsa-stl';
+
+const gcdTree = new SegmentTree<number>(
+  [12, 18, 24],
+  (a, b) => {
+    let x = a;
+    let y = b;
+    while (y !== 0) {
+      const t = y;
+      y = x % y;
+      x = t;
+    }
+    return x;
+  },
+  0
+);
+console.log(gcdTree.query(0, 2)); // gcd(12, 18, 24) === 6
+
+// Non-numeric example: concatenate strings
+const strTree = new SegmentTree<string>(
+  ['a', 'b', 'c'],
+  (a, b) => a + b,
+  ''
+);
+console.log(strTree.query(0, 2)); // 'abc'
+```
+
+### GeneralSegmentTree
+
+Use **`GeneralSegmentTree<T, V>`** when **raw** values `V` differ from the **aggregate** type `T`:
+
+- **`merge(left, right)`** — combine two child aggregates (internal nodes).
+- **`neutral`** — identity for `merge` when a query does not overlap a segment.
+- **`buildLeaf(value, index)`** — build the leaf from the raw array on initial construction and on every `update`.
+
+```ts
+import { GeneralSegmentTree } from 'typescript-dsa-stl';
+
+// Store sum of squares; raw array is plain numbers
+const st = new GeneralSegmentTree<number, number>([1, 2, 3], {
+  merge: (a, b) => a + b,
+  neutral: 0,
+  buildLeaf: (v, i) => v * v + i,
+});
+console.log(st.query(0, 2)); // (1+0) + (4+1) + (9+2) = 17
+st.update(1, 4);
+console.log(st.rawAt(1)); // 4 — current raw value at index 1
+```
+
+### LazySegmentTreeSum and example
+
+**`rangeAdd(l, r, delta)`** adds `delta` to every element in the inclusive range. **`rangeSum(l, r)`** returns the sum. **`set(i, value)`** assigns one position (lazy tags are applied along the path). All are **O(log n)** — see the [complexity table](#segment-tree-overview-and-complexity) above.
+
+```ts
+import { LazySegmentTreeSum } from 'typescript-dsa-stl';
+
+const lazy = new LazySegmentTreeSum([0, 0, 0, 0]);
+lazy.rangeAdd(1, 2, 5); // indices 1 and 2 get +5
+console.log(lazy.rangeSum(0, 3)); // 10
+lazy.set(0, 100);
+console.log(lazy.rangeSum(0, 3)); // 100 + 5 + 5 + 0
+```
+
+**Example — bulk adjustment on a slice, then aggregate:** apply the **same delta** to **every** element in an index range (bonuses, prorated credits, simulation shocks), then query **range sums** without updating each cell one by one.
 
 ```ts
 import { LazySegmentTreeSum } from 'typescript-dsa-stl';
