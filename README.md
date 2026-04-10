@@ -709,42 +709,58 @@ const result: TopologicalSortResult = topologicalSortStack(n, g);
 const { order, ok } = topologicalSortIndegree(n, g);
 
 if (ok) {
-  // `order` is just an array of vertex ids: 0, 1, 2, … in a safe order.
+  // `order` here is from `topologicalSortIndegree` above → [0, 1, 2, 3] for this graph.
 
   // 1) See the whole sequence at once
-  console.log(order); // e.g. [0, 1, 2, 3]
+  console.log(order);
+  // → [ 0, 1, 2, 3 ]   (Node.js / browser consoles may add line breaks or “Array(4)” styling)
 
   // 2) How many steps (same as n when ok is true)
   console.log(order.length);
+  // → 4
 
   // 3) Pick by position: first task, second task, …
   const first = order[0];
   const second = order[1];
   console.log('do vertex', first, 'before', second);
+  // → do vertex 0 before 1
 
   // 4) Simple loop with indices
   for (let i = 0; i < order.length; i++) {
     console.log('step', i + 1, '→ vertex', order[i]);
   }
+  // → step 1 → vertex 0
+  // → step 2 → vertex 1
+  // → step 3 → vertex 2
+  // → step 4 → vertex 3
 
   // 5) Same loop, shorter (when you only need the vertex id)
   for (const vertex of order) {
     console.log('run job for vertex', vertex);
   }
+  // → run job for vertex 0
+  // → run job for vertex 1
+  // → run job for vertex 2
+  // → run job for vertex 3
 
   // 6) Optional: each number is an index into your own list of names
   const jobNames = ['bootstrap', 'compileA', 'compileB', 'link'];
   const readable = order.map((vertex) => jobNames[vertex]);
   console.log(readable.join(' → '));
+  // → bootstrap → compileA → compileB → link
 } else {
   // No valid order exists (cycle). Use a flag, return early, or show an error.
   console.error('Graph has a cycle; cannot topologically sort.');
+  // → Graph has a cycle; cannot topologically sort.
+  //   (often printed on stderr; some runtimes prepend “Error” styling)
 }
 
 // Compare algorithms (same `ok` on a given graph; `order` may differ)
 const a = topologicalSortStack(n, g);
 const b = topologicalSortIndegree(n, g);
-console.log(a.ok, b.ok); // true, true
+console.log(a.ok, b.ok);
+// → true true
+//   (here `a.order` is [0, 2, 1, 3] and `b.order` is [0, 1, 2, 3] — both valid)
 
 // Cycle: 0 → 1 → 2 → 0
 const cyclic = createAdjacencyList(3);
@@ -752,8 +768,10 @@ addEdge(cyclic, 0, 1);
 addEdge(cyclic, 1, 2);
 addEdge(cyclic, 2, 0);
 const bad = topologicalSortStack(3, cyclic);
-console.log(bad.ok);    // false
-console.log(bad.order); // []
+console.log(bad.ok);
+// → false
+console.log(bad.order);
+// → []
 ```
 
 ### Disjoint Set Union (Union-Find)
