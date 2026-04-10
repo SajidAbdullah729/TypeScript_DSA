@@ -14,9 +14,9 @@ STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, 
 | [Package layout & imports](#package-layout--imports) | Barrel vs subpaths (tree-shaking) |
 | [Quick start](#quick-start) | One file showing main APIs |
 | [API reference](#api-reference) | Export tables |
-| [Complexity](#complexity) | Big-O for collections (segment trees: [below](#segment-tree-overview-and-complexity)) |
+| [Complexity](#complexity) | Big-O for collections |
 | [Collections](#collections) | Deque, nested vectors, multi-map / multi-set |
-| [Segment trees](#segment-trees) | [Overview & complexity](#segment-tree-overview-and-complexity) · [Sum / Min / Max + example](#segment-tree-sum-min-max-and-example) · [Generic SegmentTree](#generic-segmenttree) · [GeneralSegmentTree](#generalsegmenttree) · [LazySegmentTreeSum + example](#lazysegmenttreesum-and-example) |
+| [Segment trees](#segment-trees) | Overview, variants, and examples (one section) |
 | [Graph algorithms](#graph-algorithms) | Adjacency lists, BFS/DFS, components, MST, shortest paths |
 | [String algorithms](#string-algorithms) | KMP, Rabin–Karp, rolling hash |
 | [For maintainers](#for-maintainers) | Build and publish |
@@ -201,7 +201,7 @@ import type { Comparator } from 'typescript-dsa-stl/types';
 \* Amortized (hash).  
 \** At a known node.
 
-Segment-tree time and space behaviour is summarized in [Segment tree overview and complexity](#segment-tree-overview-and-complexity) (same section as the usage examples).
+Segment-tree time and space behaviour is documented in [Segment trees](#segment-trees) (overview and table at the start of that section).
 
 ---
 
@@ -325,8 +325,6 @@ for (const [key, value] of index) {
 
 ## Segment trees
 
-**In this section:** [Overview & complexity](#segment-tree-overview-and-complexity) · [Sum / Min / Max + example](#segment-tree-sum-min-max-and-example) · [Generic SegmentTree](#generic-segmenttree) · [GeneralSegmentTree](#generalsegmenttree) · [LazySegmentTreeSum + example](#lazysegmenttreesum-and-example)
-
 ### Segment tree overview and complexity
 
 Segment trees support **range queries** and **point updates** in **O(log n)**. Range endpoints are **inclusive**: `query(l, r)` covers indices `l` through `r`.
@@ -447,7 +445,7 @@ console.log(st.rawAt(1)); // 4 — current raw value at index 1
 
 ### LazySegmentTreeSum and example
 
-**`rangeAdd(l, r, delta)`** adds `delta` to every element in the inclusive range. **`rangeSum(l, r)`** returns the sum. **`set(i, value)`** assigns one position (lazy tags are applied along the path). All are **O(log n)** — see the [complexity table](#segment-tree-overview-and-complexity) above.
+**`rangeAdd(l, r, delta)`** adds `delta` to every element in the inclusive range. **`rangeSum(l, r)`** returns the sum. **`set(i, value)`** assigns one position (lazy tags are applied along the path). All are **O(log n)** — see the complexity table in the overview above.
 
 ```ts
 import { LazySegmentTreeSum } from 'typescript-dsa-stl';
