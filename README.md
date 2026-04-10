@@ -709,15 +709,35 @@ const result: TopologicalSortResult = topologicalSortStack(n, g);
 const { order, ok } = topologicalSortIndegree(n, g);
 
 if (ok) {
-  // `order` is number[] — vertex indices in a valid sequence
-  for (const u of order) {
-    console.log(`do step ${u}`);
+  // `order` is just an array of vertex ids: 0, 1, 2, … in a safe order.
+
+  // 1) See the whole sequence at once
+  console.log(order); // e.g. [0, 1, 2, 3]
+
+  // 2) How many steps (same as n when ok is true)
+  console.log(order.length);
+
+  // 3) Pick by position: first task, second task, …
+  const first = order[0];
+  const second = order[1];
+  console.log('do vertex', first, 'before', second);
+
+  // 4) Simple loop with indices
+  for (let i = 0; i < order.length; i++) {
+    console.log('step', i + 1, '→ vertex', order[i]);
   }
-  // Map indices to names (tasks, packages, etc.)
-  const names = ['bootstrap', 'compileA', 'compileB', 'link'];
-  const namedSteps = order.map((u) => names[u]);
-  console.log(namedSteps.join(' → '));
+
+  // 5) Same loop, shorter (when you only need the vertex id)
+  for (const vertex of order) {
+    console.log('run job for vertex', vertex);
+  }
+
+  // 6) Optional: each number is an index into your own list of names
+  const jobNames = ['bootstrap', 'compileA', 'compileB', 'link'];
+  const readable = order.map((vertex) => jobNames[vertex]);
+  console.log(readable.join(' → '));
 } else {
+  // No valid order exists (cycle). Use a flag, return early, or show an error.
   console.error('Graph has a cycle; cannot topologically sort.');
 }
 
