@@ -54,6 +54,7 @@
     "queue",
     "deque",
     "double-ended-queue",
+    "graph",
     "list",
     "priority-queue",
     "map",
