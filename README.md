@@ -679,7 +679,12 @@ console.log(breadthFirstSearch(5, withIsolated, 0)); // [0, 1] — not [0,1,2,3,
 - Any **directed cycle** (including a **self-loop**): `ok` is false.
 - **Undirected** graphs modeled with **both** `u → v` and `v → u`: that is a 2-cycle, so **not** a DAG unless you only use directed edges that reflect real precedence.
 
-**Example (DAG)**
+**Example (how to call it and use the result)**
+
+Both functions return the same shape: **`TopologicalSortResult`** — `{ order: number[]; ok: boolean }`.
+
+- **`ok === true`:** `order` is a **permutation of `0..n-1`**; every edge `u → v` appears with `u` before `v` in `order`.
+- **`ok === false`:** **no** full topological order exists (directed cycle). For `topologicalSortStack`, `order` is `[]`. For `topologicalSortIndegree`, `order` may list only some vertices; **do not** treat it as a complete sort.
 
 ```ts
 import {
@@ -687,6 +692,7 @@ import {
   addEdge,
   topologicalSortStack,
   topologicalSortIndegree,
+  type TopologicalSortResult,
 } from 'typescript-dsa-stl';
 
 const n = 4;
@@ -696,9 +702,38 @@ addEdge(g, 0, 2);
 addEdge(g, 1, 3);
 addEdge(g, 2, 3);
 
+// Whole result (typed)
+const result: TopologicalSortResult = topologicalSortStack(n, g);
+
+// Usually destructure
+const { order, ok } = topologicalSortIndegree(n, g);
+
+if (ok) {
+  // `order` is number[] — vertex indices in a valid sequence
+  for (const u of order) {
+    console.log(`do step ${u}`);
+  }
+  // Map indices to names (tasks, packages, etc.)
+  const names = ['bootstrap', 'compileA', 'compileB', 'link'];
+  const namedSteps = order.map((u) => names[u]);
+  console.log(namedSteps.join(' → '));
+} else {
+  console.error('Graph has a cycle; cannot topologically sort.');
+}
+
+// Compare algorithms (same `ok` on a given graph; `order` may differ)
 const a = topologicalSortStack(n, g);
 const b = topologicalSortIndegree(n, g);
-// a.ok === true, b.ok === true; order arrays are valid topsorts (may differ)
+console.log(a.ok, b.ok); // true, true
+
+// Cycle: 0 → 1 → 2 → 0
+const cyclic = createAdjacencyList(3);
+addEdge(cyclic, 0, 1);
+addEdge(cyclic, 1, 2);
+addEdge(cyclic, 2, 0);
+const bad = topologicalSortStack(3, cyclic);
+console.log(bad.ok);    // false
+console.log(bad.order); // []
 ```
 
 ### Disjoint Set Union (Union-Find)
