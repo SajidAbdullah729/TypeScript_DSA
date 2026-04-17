@@ -59,6 +59,7 @@ export {
   KnuthMorrisPratt,
   StringRollingHash,
   RabinKarp,
+  Trie,
   RABIN_KARP_DEFAULT_MODS,
   breadthFirstSearch,
   depthFirstSearch,

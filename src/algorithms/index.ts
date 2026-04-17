@@ -19,6 +19,7 @@ export { DisjointSetUnion } from './disjointSetUnion.js';
 export { KnuthMorrisPratt } from './kmp.js';
 export { StringRollingHash } from './stringHashing.js';
 export { RabinKarp, RABIN_KARP_DEFAULT_MODS } from './rabinKarp.js';
+export { Trie } from './trie.js';
 export type { RabinKarpTripleMods } from './rabinKarp.js';
 export type { WeightedUndirectedEdge, TopologicalSortResult } from './graph.js';
 export {
