@@ -18,7 +18,7 @@ STL-style data structures and algorithms for TypeScript: **Vector**, **Stack**, 
 | [Collections](#collections) | Deque, nested vectors, multi-map / multi-set |
 | [Segment trees](#segment-trees) | Overview, variants, and examples (one section) |
 | [Graph algorithms](#graph-algorithms) | Adjacency lists, BFS/DFS, topological sort, components, MST, shortest paths |
-| [String algorithms](#string-algorithms) | KMP, Rabin–Karp, rolling hash |
+| [String algorithms](#string-algorithms) | KMP, Rabin–Karp, Trie, rolling hash |
 | [For maintainers](#for-maintainers) | Build and publish |
 | [License](#license) | MIT |
 
@@ -49,6 +49,7 @@ import {
   topologicalSortIndegree,
   KnuthMorrisPratt,
   RabinKarp,
+  Trie,
   StringRollingHash,
 } from 'typescript-dsa-stl/algorithms';
 import { clamp, range } from 'typescript-dsa-stl/utils';
@@ -166,7 +167,7 @@ range(0, 5);            // [0, 1, 2, 3, 4]
 | Area | Exports |
 |------|---------|
 | **Collections** | `Vector`, `Stack`, `Queue`, `Deque`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet`, `GeneralSegmentTree`, `SegmentTree`, `SegmentTreeSum`, `SegmentTreeMin`, `SegmentTreeMax`, `LazySegmentTreeSum`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList`, `createAdjacencyList`, `createWeightedAdjacencyList`, `addEdge`, `deleteEdge` |
-| **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition`, `DisjointSetUnion`, `KnuthMorrisPratt`, `RabinKarp`, `RABIN_KARP_DEFAULT_MODS`, `StringRollingHash`, `breadthFirstSearch`, `depthFirstSearch`, `topologicalSortStack`, `topologicalSortIndegree`, `connectedComponents`, `kruskalMST`, `dijkstra`, `reconstructPath` |
+| **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition`, `DisjointSetUnion`, `KnuthMorrisPratt`, `RabinKarp`, `Trie`, `RABIN_KARP_DEFAULT_MODS`, `StringRollingHash`, `breadthFirstSearch`, `depthFirstSearch`, `topologicalSortStack`, `topologicalSortIndegree`, `connectedComponents`, `kruskalMST`, `dijkstra`, `reconstructPath` |
 | **Utils** | `clamp`, `range`, `noop`, `identity`, `swap` |
 | **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray`, `RabinKarpTripleMods`, `WeightedUndirectedEdge`, `TopologicalSortResult`, `GeneralSegmentTreeConfig`, `SegmentCombine`, `SegmentMerge`, `SegmentLeafBuild` |
 
@@ -174,7 +175,7 @@ range(0, 5);            // [0, 1, 2, 3, 4]
 
 ```ts
 import { Vector, Stack, Queue, Deque } from 'typescript-dsa-stl/collections';
-import { sort, binarySearch, breadthFirstSearch, depthFirstSearch, topologicalSortStack, topologicalSortIndegree, KnuthMorrisPratt, RabinKarp, StringRollingHash } from 'typescript-dsa-stl/algorithms';
+import { sort, binarySearch, breadthFirstSearch, depthFirstSearch, topologicalSortStack, topologicalSortIndegree, KnuthMorrisPratt, RabinKarp, Trie, StringRollingHash } from 'typescript-dsa-stl/algorithms';
 import { clamp, range } from 'typescript-dsa-stl/utils';
 import type { Comparator } from 'typescript-dsa-stl/types';
 ```
@@ -890,9 +891,9 @@ console.log(path); // [0, 1, 2, 4]
 
 ## String algorithms
 
-### Knuth–Morris–Pratt (KMP), Rabin–Karp, and string rolling hash
+### Knuth–Morris–Pratt (KMP), Rabin–Karp, Trie, and string rolling hash
 
-All three work on **UTF-16 code units** (same as `String` indexing). They solve **different jobs**: KMP and Rabin–Karp are **pattern matchers** (list all start indices of a pattern in a text). `StringRollingHash` is a **substring-hash tool** on a **fixed** string—you combine it with your own logic (equality checks, binary search, etc.).
+All four work on **UTF-16 code units** (same as `String` indexing). KMP and Rabin–Karp are **pattern matchers** (list all start indices of a pattern in a text). `Trie` is a **prefix tree** for fast dictionary operations (`insert`, exact word lookup, prefix lookup, deletion). `StringRollingHash` is a **substring-hash tool** on a **fixed** string—you combine it with your own logic (equality checks, binary search, etc.).
 
 #### When to use which
 
@@ -900,16 +901,18 @@ All three work on **UTF-16 code units** (same as `String` indexing). They solve 
 |------|--------|-----|
 | **Find every occurrence** of **one pattern** in **one text**, with **worst-case** O(n + m), **no hashing**, predictable behaviour | **KnuthMorrisPratt** | LPS table; only character comparisons; no modular arithmetic. |
 | **Find every occurrence** of a pattern using a **sliding window** and **hashes** (triple moduli + final verify) | **RabinKarp** | Same asymptotic average case; good when you think in rolling hashes or batch **same-length** patterns. |
+| **Maintain a dynamic dictionary** of words and answer **exact / prefix** queries efficiently | **Trie** | Insert/search/prefix in O(L) where L is key length; natural fit for autocomplete and prefix filtering. |
 | **Many O(1) hash queries** on **substrings of one string** you already hold (compare two ranges, palindrome / LCP style checks, rolling checks without slicing) | **StringRollingHash** | O(n) preprocess, O(1) per `substringHash`; **not** a drop-in “find all matches” API—use KMP or Rabin–Karp for that. |
 
 **Concrete situations**
 
 - **Use KMP** when you need a **guaranteed** linear scan (interviews, strict time bounds, large alphabets), or the pattern is **reused** across many searches (`new KnuthMorrisPratt(pattern)` once, `.search(text)` many times).
 - **Use Rabin–Karp** when a **rolling hash** model fits (e.g. one long stream, one pattern), or you later generalize to **several patterns of the same length** (compare each pattern’s triple hash to each window hash). Triple hashing keeps false hash positives negligible; **verification** still guarantees correct indices.
+- **Use `Trie`** when your workload is dictionary-like: store many words once, then do repeated `search(word)` and `startsWith(prefix)` checks in **O(L)**.
 - **Use `StringRollingHash`** when the problem is **“hash of s[l..r)”** many times on **one** `s`—e.g. check `s[i..i+k) === s[j..j+k)` via hash equality (then confirm if needed), or algorithms that **binary search** on length using substring hashes. For **only** “list all starts of P in T”, pick **KMP** or **Rabin–Karp** instead of building substring hashes by hand.
 
 ```ts
-import { KnuthMorrisPratt, RabinKarp, StringRollingHash } from 'typescript-dsa-stl';
+import { KnuthMorrisPratt, RabinKarp, Trie, StringRollingHash } from 'typescript-dsa-stl';
 
 // A) Pattern fixed, searched in many buffers — build KMP once, call .search() repeatedly (LPS reused).
 const multiDoc = new KnuthMorrisPratt('ERROR');
@@ -921,7 +924,15 @@ const hay = '...long text...';
 KnuthMorrisPratt.findOccurrences(hay, 'needle');
 new RabinKarp('needle').search(hay);
 
-// C) Same static string, many range-equality checks — rolling hash (not for “find all pattern starts” by itself).
+// C) Dictionary/prefix queries — Trie.
+const trie = new Trie();
+trie.insert('apple');
+trie.insert('app');
+trie.search('app');       // true
+trie.startsWith('appl');  // true
+trie.delete('app');       // true
+
+// D) Same static string, many range-equality checks — rolling hash (not for “find all pattern starts” by itself).
 const s = 'banana';
 const rh = new StringRollingHash(s);
 // Does s[1..4) equal s[3..6)? (both length 3)
@@ -937,8 +948,9 @@ const maybe = rh.substringHash(1, 3) === rh.substringHash(3, 3); // then compare
 ```ts
 import {
   KnuthMorrisPratt,
-  StringRollingHash,
   RabinKarp,
+  Trie,
+  StringRollingHash,
   RABIN_KARP_DEFAULT_MODS,
 } from 'typescript-dsa-stl';
 
@@ -974,6 +986,16 @@ console.log(RabinKarp.findOccurrences('aaaa', 'aa')); // [0, 1, 2]
 
 // Empty pattern: no matches
 console.log(new RabinKarp('').search('text')); // []
+
+// --- Trie: dictionary and prefix queries ---
+const trie = new Trie();
+trie.insert('apple');
+trie.insert('app');
+console.log(trie.search('app')); // true
+console.log(trie.search('ap')); // false
+console.log(trie.startsWith('ap')); // true
+console.log(trie.delete('app')); // true
+console.log(trie.search('app')); // false
 
 // --- String rolling hash: default base 131, mod 1_000_000_007 (both configurable) ---
 const rh = new StringRollingHash('hello');
