@@ -600,20 +600,7 @@ Use **unweighted** lists for connectivity/traversal; use **weighted** lists when
 
 ### Breadth-first search (BFS) and depth-first search (DFS)
 
-`breadthFirstSearch` and `depthFirstSearch` take the number of vertices `n`, an unweighted `AdjacencyList`, and a `start` vertex. They return the **visit order** for all vertices **reachable** from `start` (vertices outside that component are not included). For an undirected graph, add each edge in **both** directions (see `addEdge` below).
-`breadthFirstSearch` and `depthFirstSearch` take `n`, an unweighted `AdjacencyList`, and `start`. They return visit order for vertices reachable from `start`. For undirected graphs, add both directions.
-
-**Example graph (diamond):** edges `0—1`, `0—2`, `1—3`, `2—3`.
-
-```text
-      0
-     / \
-    1   2
-     \ /
-      3
-```
-
-With neighbors in ascending order, BFS from `0` is `[0, 1, 2, 3]` and DFS is `[0, 1, 3, 2]` for this graph. DFS order depends on adjacency order.
+`breadthFirstSearch` and `depthFirstSearch` take `n`, an unweighted `AdjacencyList`, and `start`. They return traversal order for vertices reachable from `start`.
 
 ```ts
 import {
@@ -626,7 +613,6 @@ import {
 const n = 4;
 const graph = createAdjacencyList(n);
 
-// Undirected diamond: add both directions for each edge
 addEdge(graph, 0, 1);
 addEdge(graph, 1, 0);
 addEdge(graph, 0, 2);
@@ -636,55 +622,17 @@ addEdge(graph, 3, 1);
 addEdge(graph, 2, 3);
 addEdge(graph, 3, 2);
 
-const start = 0;
-
-// BFS: level-by-level from start (hop count); output: [0, 1, 2, 3]
-console.log(breadthFirstSearch(n, graph, start));
-// Expected console output: [ 0, 1, 2, 3 ]
-
-// DFS: preorder with explicit stack; output: [0, 1, 3, 2] for this adjacency layout
-console.log(depthFirstSearch(n, graph, start));
-// Expected console output: [ 0, 1, 3, 2 ]
-
-// Invalid start → empty traversal
-console.log(breadthFirstSearch(n, graph, -1)); // []
-console.log(depthFirstSearch(n, graph, n)); // []
-
-// Vertex 4 isolated: BFS/DFS from 0 never visits 4
-const withIsolated = createAdjacencyList(5);
-addEdge(withIsolated, 0, 1);
-addEdge(withIsolated, 1, 0);
-console.log(breadthFirstSearch(5, withIsolated, 0)); // [0, 1] — not [0,1,2,3,4]
+console.log(breadthFirstSearch(n, graph, 0)); // [0, 1, 2, 3]
+console.log(depthFirstSearch(n, graph, 0));   // [0, 1, 3, 2]
 ```
 
-**Notes**
-
-- **Directed:** list only outgoing edges in `adj[u]`.
-- **Disconnected:** run from more starts or use `connectedComponents`.
-- **Weighted:** BFS/DFS ignore weights.
+For undirected graphs, add both directions. DFS order depends on neighbor order.
 
 ### Topological sort
 
 `topologicalSortStack` (DFS-style) and `topologicalSortIndegree` (Kahn) take `n` and a directed unweighted `AdjacencyList`. Both return `{ order, ok }`.
 
-**When to use**
-
-- **Dependency order:** tasks/build/course prerequisites.
-- **Precedence scheduling:** enforce “A before B”.
-- **Cycle detection:** `ok === false` means not a DAG.
-- **Algorithm choice:** DFS-style (`stack`) or source-peeling (`indegree`).
-
-**When topological order is not possible**
-
-- Any directed cycle (including self-loop) makes `ok` false.
-- Undirected edges encoded both ways create a 2-cycle, so not a DAG.
-
-**Example (how to call it and use the result)**
-
-Both functions return `TopologicalSortResult`: `{ order: number[]; ok: boolean }`.
-
-- **`ok === true`:** `order` is a valid topological order.
-- **`ok === false`:** no full order exists (cycle).
+Use it for dependency ordering. If `ok` is `false`, the graph has a cycle.
 
 ```ts
 import {
@@ -702,76 +650,17 @@ addEdge(g, 0, 2);
 addEdge(g, 1, 3);
 addEdge(g, 2, 3);
 
-// Whole result (typed)
-const result: TopologicalSortResult = topologicalSortStack(n, g);
-
-// Usually destructure
-const { order, ok } = topologicalSortIndegree(n, g);
-
-if (ok) {
-  // `order` here is from `topologicalSortIndegree` above → [0, 1, 2, 3] for this graph.
-
-  // 1) See the whole sequence at once
-  console.log(order);
-  // → [ 0, 1, 2, 3 ]   (Node.js / browser consoles may add line breaks or “Array(4)” styling)
-
-  // 2) How many steps (same as n when ok is true)
-  console.log(order.length);
-  // → 4
-
-  // 3) Pick by position: first task, second task, …
-  const first = order[0];
-  const second = order[1];
-  console.log('do vertex', first, 'before', second);
-  // → do vertex 0 before 1
-
-  // 4) Simple loop with indices
-  for (let i = 0; i < order.length; i++) {
-    console.log('step', i + 1, '→ vertex', order[i]);
-  }
-  // → step 1 → vertex 0
-  // → step 2 → vertex 1
-  // → step 3 → vertex 2
-  // → step 4 → vertex 3
-
-  // 5) Same loop, shorter (when you only need the vertex id)
-  for (const vertex of order) {
-    console.log('run job for vertex', vertex);
-  }
-  // → run job for vertex 0
-  // → run job for vertex 1
-  // → run job for vertex 2
-  // → run job for vertex 3
-
-  // 6) Optional: each number is an index into your own list of names
-  const jobNames = ['bootstrap', 'compileA', 'compileB', 'link'];
-  const readable = order.map((vertex) => jobNames[vertex]);
-  console.log(readable.join(' → '));
-  // → bootstrap → compileA → compileB → link
-} else {
-  // No valid order exists (cycle). Use a flag, return early, or show an error.
-  console.error('Graph has a cycle; cannot topologically sort.');
-  // → Graph has a cycle; cannot topologically sort.
-  //   (often printed on stderr; some runtimes prepend “Error” styling)
-}
-
-// Compare algorithms (same `ok` on a given graph; `order` may differ)
-const a = topologicalSortStack(n, g);
+const a: TopologicalSortResult = topologicalSortStack(n, g);
 const b = topologicalSortIndegree(n, g);
-console.log(a.ok, b.ok);
-// → true true
-//   (here `a.order` is [0, 2, 1, 3] and `b.order` is [0, 1, 2, 3] — both valid)
+console.log(a.ok, a.order);
+console.log(b.ok, b.order);
 
-// Cycle: 0 → 1 → 2 → 0
 const cyclic = createAdjacencyList(3);
 addEdge(cyclic, 0, 1);
 addEdge(cyclic, 1, 2);
 addEdge(cyclic, 2, 0);
 const bad = topologicalSortStack(3, cyclic);
-console.log(bad.ok);
-// → false
-console.log(bad.order);
-// → []
+console.log(bad.ok, bad.order); // false, []
 ```
 
 ### Disjoint Set Union (Union-Find)
