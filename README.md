@@ -665,8 +665,7 @@ console.log(bad.ok, bad.order); // false, []
 
 ### Disjoint Set Union (Union-Find)
 
-Use Union-Find (DSU) to compute connected components efficiently. It merges endpoints of every edge in the adjacency list, so for directed graphs it returns weak connectivity components.
-Use DSU to compute connected components quickly. For directed graphs, this gives weakly connected components.
+Use DSU to compute connected components. For directed graphs, this gives weakly connected components.
 
 ```ts
 import { createAdjacencyList, connectedComponents } from 'typescript-dsa-stl';
@@ -684,7 +683,6 @@ const comps = connectedComponents(n, graph);
 
 #### Traverse the result
 
-`connectedComponents(n, adj)` returns `number[][]` where each inner array is a component (list of vertices).
 `connectedComponents(n, adj)` returns `number[][]` (one vertex list per component).
 
 ```ts
@@ -783,23 +781,16 @@ console.log(path); // [0, 1, 2, 4]
 
 ### Knuth–Morris–Pratt (KMP), Rabin–Karp, Trie, and string rolling hash
 
-All four operate on UTF-16 code units. KMP and Rabin–Karp find all pattern start indices, `Trie` is for dictionary/prefix lookups, and `StringRollingHash` gives fast substring hashes on one fixed string.
+All four operate on UTF-16 code units: KMP/Rabin–Karp for pattern matching, `Trie` for exact/prefix lookup, `StringRollingHash` for substring hashes.
 
 #### When to use which
 
 | Goal | Prefer | Why |
 |------|--------|-----|
-| **Find every occurrence** of **one pattern** in **one text**, with **worst-case** O(n + m), **no hashing**, predictable behaviour | **KnuthMorrisPratt** | LPS table; only character comparisons; no modular arithmetic. |
-| **Find every occurrence** of a pattern using a **sliding window** and **hashes** (triple moduli + final verify) | **RabinKarp** | Same asymptotic average case; good when you think in rolling hashes or batch **same-length** patterns. |
-| **Maintain a dynamic dictionary** of words and answer **exact / prefix** queries efficiently | **Trie** | Insert/search/prefix in O(L) where L is key length; natural fit for autocomplete and prefix filtering. |
-| **Many O(1) hash queries** on **substrings of one string** you already hold (compare two ranges, palindrome / LCP style checks, rolling checks without slicing) | **StringRollingHash** | O(n) preprocess, O(1) per `substringHash`; **not** a drop-in “find all matches” API—use KMP or Rabin–Karp for that. |
-
-**Concrete situations**
-
-- **KMP:** guaranteed linear matching, especially when reusing one pattern.
-- **Rabin–Karp:** rolling-hash style matching; useful for same-length pattern windows.
-- **`Trie`:** repeated exact/prefix queries over many stored words.
-- **`StringRollingHash`:** many substring-equality/hash queries on one fixed string.
+| **Single-pattern matching with predictable worst-case** | **KnuthMorrisPratt** | Linear time, no hashing. |
+| **Rolling-hash style matching** | **RabinKarp** | Window hashes + final verify. |
+| **Dynamic dictionary / prefix queries** | **Trie** | `insert`/`search`/`startsWith` in O(L). |
+| **Many substring hash queries on one string** | **StringRollingHash** | O(n) preprocess, O(1) per query. |
 
 ```ts
 import { KnuthMorrisPratt, RabinKarp, Trie, StringRollingHash } from 'typescript-dsa-stl';
@@ -829,11 +820,7 @@ const rh = new StringRollingHash(s);
 const maybe = rh.substringHash(1, 3) === rh.substringHash(3, 3); // then compare slices if you need certainty
 ```
 
-**KMP:** builds an LPS table and scans once; **O(n + m)**.
-
-**Rabin–Karp:** uses triple rolling hashes plus final character verification; average **O(n + m)**.
-
-**Rolling hash:** precompute prefix hashes for **O(1)** substring-hash queries after **O(n)** setup.
+KMP and Rabin–Karp matching are linear in practice for this API; rolling hash is O(n) preprocess + O(1) substring hash query.
 
 ```ts
 import {
