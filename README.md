@@ -504,11 +504,11 @@ Same pattern works for inventory ranges, loyalty batches, and simulation buffs.
 
 ## Graph algorithms
 
-Graph helpers live on the main package and under `typescript-dsa-stl/collections` for adjacency types and factories.
+Graph helpers are available from the main package and `typescript-dsa-stl/collections`.
 
 ### Adjacency list (like C++ `vector<vector<type>> graph(n)`)
 
-You can model C++-style adjacency lists using the graph types and helpers exported from `typescript-dsa-stl/collections` (or the main package).
+Use these types/helpers to model C++-style adjacency lists.
 
 #### Unweighted adjacency list
 
@@ -588,19 +588,20 @@ deleteEdge(graph, u, v, w);      // delete all edges u -> v with weight w
 
 #### Graph adjacency list — use cases
 
-Use an **unweighted** graph (adjacency list) when you only care about connectivity; use a **weighted** graph when edges have costs (distance, time, capacity).
+Use **unweighted** lists for connectivity/traversal; use **weighted** lists when edges have costs.
 
 | Use case | When to use |
 |----------|-------------|
-| **BFS / DFS, connectivity** | Unweighted: shortest path in terms of hop count, connected components, cycle detection. |
-| **Shortest path (Dijkstra), MST** | Weighted: edge weights as distances or costs; run Dijkstra, Prim, or Kruskal on the list. |
-| **Social / dependency graphs** | Unweighted or weighted: followers, dependencies (e.g. build order), recommendation graphs. |
-| **Grid / game graphs** | Unweighted: 4- or 8-neighbor grids; weighted if movement costs differ per cell. |
-| **Network / flow** | Weighted: capacities or latencies on edges for max-flow or routing. |
+| **BFS / DFS, connectivity** | Unweighted hop-based traversal and components. |
+| **Shortest path, MST** | Weighted edges for distance/cost problems. |
+| **Social / dependency graphs** | Use either, depending on whether edges have weights. |
+| **Grid / game graphs** | Unweighted for equal moves; weighted for variable move cost. |
+| **Network / flow** | Weighted capacity/latency models. |
 
 ### Breadth-first search (BFS) and depth-first search (DFS)
 
 `breadthFirstSearch` and `depthFirstSearch` take the number of vertices `n`, an unweighted `AdjacencyList`, and a `start` vertex. They return the **visit order** for all vertices **reachable** from `start` (vertices outside that component are not included). For an undirected graph, add each edge in **both** directions (see `addEdge` below).
+`breadthFirstSearch` and `depthFirstSearch` take `n`, an unweighted `AdjacencyList`, and `start`. They return visit order for vertices reachable from `start`. For undirected graphs, add both directions.
 
 **Example graph (diamond):** edges `0—1`, `0—2`, `1—3`, `2—3`.
 
@@ -612,7 +613,7 @@ Use an **unweighted** graph (adjacency list) when you only care about connectivi
       3
 ```
 
-With neighbors listed in ascending vertex id (`0: [1,2]`, `1: [0,3]`, …), **BFS** from `0` visits by increasing distance from `0`: first `0`, then `1` and `2`, then `3` → order `[0, 1, 2, 3]`. **DFS** (preorder, first neighbor in each list first) goes `0 → 1 → 3` then `2` → order `[0, 1, 3, 2]`. The exact DFS order depends on how you order each adjacency list.
+With neighbors in ascending order, BFS from `0` is `[0, 1, 2, 3]` and DFS is `[0, 1, 3, 2]` for this graph. DFS order depends on adjacency order.
 
 ```ts
 import {
@@ -658,32 +659,32 @@ console.log(breadthFirstSearch(5, withIsolated, 0)); // [0, 1] — not [0,1,2,3,
 
 **Notes**
 
-- **Directed graphs:** only list outgoing edges in `adj[u]`; traversal follows arcs from `start`.
-- **Disconnected graphs:** run again from another unvisited `start`, or use `connectedComponents` to enumerate components first.
-- **Weighted graphs:** for traversal ignoring weights, use the same vertex lists as the unweighted graph (weights are ignored by these two functions).
+- **Directed:** list only outgoing edges in `adj[u]`.
+- **Disconnected:** run from more starts or use `connectedComponents`.
+- **Weighted:** BFS/DFS ignore weights.
 
 ### Topological sort
 
-`topologicalSortStack` (iterative DFS / finish order) and `topologicalSortIndegree` (Kahn’s algorithm, zero-indegree queue) both take `n` and a **directed** unweighted `AdjacencyList`. They return `{ order, ok }`: a permutation of `0..n-1` when `ok` is true, or failure when a directed cycle exists.
+`topologicalSortStack` (DFS-style) and `topologicalSortIndegree` (Kahn) take `n` and a directed unweighted `AdjacencyList`. Both return `{ order, ok }`.
 
 **When to use**
 
-- **Task / build / dependency ordering:** items must happen only after their prerequisites (package install order, compile steps, course prerequisites).
-- **Scheduling under precedence constraints:** jobs with “A before B” rules and no cycles.
-- **Detecting cycles in a directed model:** if `ok` is false, the graph (on valid vertices `0..n-1`) is not a DAG.
-- **Pick either algorithm:** both answer the same yes/no; choose **stack** if you want DFS-style behavior and an explicit stack; choose **indegree** (Kahn) if you prefer peeling sources level-by-level (often closer to “ready queue” mental models).
+- **Dependency order:** tasks/build/course prerequisites.
+- **Precedence scheduling:** enforce “A before B”.
+- **Cycle detection:** `ok === false` means not a DAG.
+- **Algorithm choice:** DFS-style (`stack`) or source-peeling (`indegree`).
 
 **When topological order is not possible**
 
-- Any **directed cycle** (including a **self-loop**): `ok` is false.
-- **Undirected** graphs modeled with **both** `u → v` and `v → u`: that is a 2-cycle, so **not** a DAG unless you only use directed edges that reflect real precedence.
+- Any directed cycle (including self-loop) makes `ok` false.
+- Undirected edges encoded both ways create a 2-cycle, so not a DAG.
 
 **Example (how to call it and use the result)**
 
-Both functions return the same shape: **`TopologicalSortResult`** — `{ order: number[]; ok: boolean }`.
+Both functions return `TopologicalSortResult`: `{ order: number[]; ok: boolean }`.
 
-- **`ok === true`:** `order` is a **permutation of `0..n-1`**; every edge `u → v` appears with `u` before `v` in `order`.
-- **`ok === false`:** **no** full topological order exists (directed cycle). For `topologicalSortStack`, `order` is `[]`. For `topologicalSortIndegree`, `order` may list only some vertices; **do not** treat it as a complete sort.
+- **`ok === true`:** `order` is a valid topological order.
+- **`ok === false`:** no full order exists (cycle).
 
 ```ts
 import {
@@ -776,6 +777,7 @@ console.log(bad.order);
 ### Disjoint Set Union (Union-Find)
 
 Use Union-Find (DSU) to compute connected components efficiently. It merges endpoints of every edge in the adjacency list, so for directed graphs it returns weak connectivity components.
+Use DSU to compute connected components quickly. For directed graphs, this gives weakly connected components.
 
 ```ts
 import { createAdjacencyList, connectedComponents } from 'typescript-dsa-stl';
@@ -794,6 +796,7 @@ const comps = connectedComponents(n, graph);
 #### Traverse the result
 
 `connectedComponents(n, adj)` returns `number[][]` where each inner array is a component (list of vertices).
+`connectedComponents(n, adj)` returns `number[][]` (one vertex list per component).
 
 ```ts
 // 1) Iterate each component
@@ -810,7 +813,7 @@ const sizes = comps.map(comp => comp.length);
 
 ### Kruskal MST (uses DSU)
 
-For a weighted graph, `kruskalMST` builds a Minimum Spanning Tree (MST) using DSU.
+For weighted graphs, `kruskalMST` builds a minimum spanning tree with DSU.
 
 ```ts
 import {
@@ -834,7 +837,7 @@ const { edges, totalWeight } = kruskalMST(n, wGraph, { undirected: true });
 
 #### Traverse the MST
 
-`kruskalMST(...)` returns `{ edges, totalWeight }`. To traverse the MST like a graph, convert `edges` into an adjacency list:
+`kruskalMST(...)` returns `{ edges, totalWeight }`. Convert `edges` to an adjacency list to traverse it.
 
 ```ts
 import { createWeightedAdjacencyList } from 'typescript-dsa-stl/collections';
@@ -855,7 +858,7 @@ for (const { to, weight } of mstAdj[0]) {
 
 ### Dijkstra shortest paths
 
-`dijkstra` computes single-source shortest paths on a **weighted** graph with **non-negative** edge weights.
+`dijkstra` computes single-source shortest paths on weighted graphs with non-negative edges.
 It returns:
 
 - `dist[v]`: shortest distance from `start` to `v` (`Infinity` if unreachable)
