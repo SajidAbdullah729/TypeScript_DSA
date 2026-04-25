@@ -167,15 +167,15 @@ range(0, 5);            // [0, 1, 2, 3, 4]
 | Area | Exports |
 |------|---------|
 | **Collections** | `Vector`, `Stack`, `Queue`, `Deque`, `List`, `ListNode`, `PriorityQueue`, `OrderedMap`, `UnorderedMap`, `OrderedSet`, `UnorderedSet`, `OrderedMultiMap`, `OrderedMultiSet`, `GeneralSegmentTree`, `SegmentTree`, `SegmentTreeSum`, `SegmentTreeMin`, `SegmentTreeMax`, `LazySegmentTreeSum`, `WeightedEdge`, `AdjacencyList`, `WeightedAdjacencyList`, `createAdjacencyList`, `createWeightedAdjacencyList`, `addEdge`, `deleteEdge` |
-| **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition`, `DisjointSetUnion`, `KnuthMorrisPratt`, `RabinKarp`, `Trie`, `RABIN_KARP_DEFAULT_MODS`, `StringRollingHash`, `breadthFirstSearch`, `depthFirstSearch`, `topologicalSortStack`, `topologicalSortIndegree`, `connectedComponents`, `kruskalMST`, `dijkstra`, `reconstructPath` |
+| **Algorithms** | `sort`, `find`, `findIndex`, `transform`, `filter`, `reduce`, `reverse`, `unique`, `binarySearch`, `lowerBound`, `upperBound`, `min`, `max`, `partition`, `DisjointSetUnion`, `KnuthMorrisPratt`, `RabinKarp`, `Trie`, `RABIN_KARP_DEFAULT_MODS`, `StringRollingHash`, `breadthFirstSearch`, `depthFirstSearch`, `topologicalSortStack`, `topologicalSortIndegree`, `connectedComponents`, `kruskalMST`, `dijkstra`, `bellmanFord`, `floydWarshall`, `reconstructPath`, `reconstructFloydWarshallPath` |
 | **Utils** | `clamp`, `range`, `noop`, `identity`, `swap` |
-| **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray`, `RabinKarpTripleMods`, `WeightedUndirectedEdge`, `TopologicalSortResult`, `GeneralSegmentTreeConfig`, `SegmentCombine`, `SegmentMerge`, `SegmentLeafBuild` |
+| **Types** | `Comparator`, `Predicate`, `UnaryFn`, `Reducer`, `IterableLike`, `toArray`, `RabinKarpTripleMods`, `WeightedUndirectedEdge`, `TopologicalSortResult`, `BellmanFordResult`, `FloydWarshallResult`, `GeneralSegmentTreeConfig`, `SegmentCombine`, `SegmentMerge`, `SegmentLeafBuild` |
 
 ### Subpath imports (tree-shaking)
 
 ```ts
 import { Vector, Stack, Queue, Deque } from 'typescript-dsa-stl/collections';
-import { sort, binarySearch, breadthFirstSearch, depthFirstSearch, topologicalSortStack, topologicalSortIndegree, KnuthMorrisPratt, RabinKarp, Trie, StringRollingHash } from 'typescript-dsa-stl/algorithms';
+import { sort, binarySearch, breadthFirstSearch, depthFirstSearch, topologicalSortStack, topologicalSortIndegree, dijkstra, bellmanFord, floydWarshall, KnuthMorrisPratt, RabinKarp, Trie, StringRollingHash } from 'typescript-dsa-stl/algorithms';
 import { clamp, range } from 'typescript-dsa-stl/utils';
 import type { Comparator } from 'typescript-dsa-stl/types';
 ```
@@ -773,6 +773,48 @@ console.log(dist); // dist[v] = shortest distance from 0 to v (Infinity if unrea
 const target = 4; // destination vertex
 const path = reconstructPath(prev, 0, target); // [0, ..., target] or [] if unreachable
 console.log(path); // [0, 1, 2, 4]
+```
+
+### Bellman-Ford shortest paths
+
+`bellmanFord` computes single-source shortest paths with negative edges allowed and reports reachable negative cycles.
+
+```ts
+import { createWeightedAdjacencyList, addEdge, bellmanFord, reconstructPath } from 'typescript-dsa-stl';
+
+const n = 4;
+const g = createWeightedAdjacencyList(n);
+addEdge(g, 0, 1, 1);
+addEdge(g, 1, 2, -2);
+addEdge(g, 2, 3, 2);
+
+const { dist, prev, hasNegativeCycle } = bellmanFord(n, g, 0);
+console.log(dist, hasNegativeCycle); // [0, 1, -1, 1], false
+console.log(reconstructPath(prev, 0, 3)); // [0, 1, 2, 3]
+```
+
+### Floyd-Warshall all-pairs shortest paths
+
+`floydWarshall` computes all-pairs shortest paths and includes a `next` matrix for path reconstruction.
+
+```ts
+import {
+  createWeightedAdjacencyList,
+  addEdge,
+  floydWarshall,
+  reconstructFloydWarshallPath,
+} from 'typescript-dsa-stl';
+
+const n = 4;
+const g = createWeightedAdjacencyList(n);
+addEdge(g, 0, 1, 3);
+addEdge(g, 1, 2, 1);
+addEdge(g, 0, 2, 10);
+addEdge(g, 2, 3, 2);
+
+const { dist, next, hasNegativeCycle } = floydWarshall(n, g);
+console.log(dist[0][3], hasNegativeCycle); // 6, false
+console.log(reconstructFloydWarshallPath(next, 0, 3)); // [0, 1, 2, 3]
 ```
 
 ---

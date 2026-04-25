@@ -67,13 +67,18 @@ export {
   topologicalSortIndegree,
   connectedComponents,
   dijkstra,
+  bellmanFord,
+  floydWarshall,
   reconstructPath,
+  reconstructFloydWarshallPath,
   kruskalMST,
 } from './algorithms/index.js';
 export type {
   WeightedUndirectedEdge,
   RabinKarpTripleMods,
   TopologicalSortResult,
+  BellmanFordResult,
+  FloydWarshallResult,
 } from './algorithms/index.js';
 export { clamp, range, noop, identity, swap } from './utils/index.js';
 export type { Comparator, Predicate, UnaryFn, Reducer, IterableLike } from './types/index.js';

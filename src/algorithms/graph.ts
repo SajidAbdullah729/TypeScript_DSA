@@ -198,6 +198,24 @@ export interface WeightedUndirectedEdge {
   weight: number;
 }
 
+export interface BellmanFordResult {
+  /** Shortest distance from `start` to each vertex (`Infinity` if unreachable). */
+  dist: number[];
+  /** Previous vertex on one shortest path tree (`-1` if none). */
+  prev: number[];
+  /** True if a negative cycle is reachable from `start`. */
+  hasNegativeCycle: boolean;
+}
+
+export interface FloydWarshallResult {
+  /** All-pairs shortest path distances (`Infinity` if unreachable). */
+  dist: number[][];
+  /** Next-hop matrix for path reconstruction (`-1` means no path). */
+  next: number[][];
+  /** True if at least one negative cycle exists in the graph. */
+  hasNegativeCycle: boolean;
+}
+
 /**
  * Connected components in an (unweighted) graph using DSU.
  * Complexity: O((n + m) * alpha(n)).
@@ -316,6 +334,118 @@ export function dijkstra(
 }
 
 /**
+ * Bellman-Ford single-source shortest paths on a weighted graph.
+ * Supports negative edge weights and reports if a reachable negative cycle exists.
+ *
+ * Complexity: O(n * m), where n = vertices and m = edges.
+ */
+export function bellmanFord(
+  n: number,
+  adj: WeightedAdjacencyList<number, number>,
+  start: number,
+): BellmanFordResult {
+  const dist = Array<number>(n).fill(Number.POSITIVE_INFINITY);
+  const prev = Array<number>(n).fill(-1);
+  if (start < 0 || start >= n) {
+    return { dist, prev, hasNegativeCycle: false };
+  }
+
+  type Edge = { u: number; v: number; w: number };
+  const edges: Edge[] = [];
+  for (let u = 0; u < n; u++) {
+    for (const e of adj[u] ?? []) {
+      const v = e.to;
+      if (v < 0 || v >= n) continue;
+      edges.push({ u, v, w: e.weight });
+    }
+  }
+
+  dist[start] = 0;
+
+  for (let i = 0; i < n - 1; i++) {
+    let changed = false;
+    for (const { u, v, w } of edges) {
+      if (dist[u] === Number.POSITIVE_INFINITY) continue;
+      const nd = dist[u] + w;
+      if (nd < dist[v]) {
+        dist[v] = nd;
+        prev[v] = u;
+        changed = true;
+      }
+    }
+    if (!changed) break;
+  }
+
+  let hasNegativeCycle = false;
+  for (const { u, v, w } of edges) {
+    if (dist[u] === Number.POSITIVE_INFINITY) continue;
+    if (dist[u] + w < dist[v]) {
+      hasNegativeCycle = true;
+      break;
+    }
+  }
+
+  return { dist, prev, hasNegativeCycle };
+}
+
+/**
+ * Floyd-Warshall all-pairs shortest paths on a weighted graph.
+ * Handles negative edge weights, and reports if any negative cycle exists.
+ *
+ * Complexity: O(n^3) time, O(n^2) space.
+ */
+export function floydWarshall(
+  n: number,
+  adj: WeightedAdjacencyList<number, number>,
+): FloydWarshallResult {
+  const dist: number[][] = Array.from({ length: n }, () =>
+    Array<number>(n).fill(Number.POSITIVE_INFINITY),
+  );
+  const next: number[][] = Array.from({ length: n }, () => Array<number>(n).fill(-1));
+
+  for (let i = 0; i < n; i++) {
+    dist[i]![i] = 0;
+    next[i]![i] = i;
+  }
+
+  for (let u = 0; u < n; u++) {
+    for (const e of adj[u] ?? []) {
+      const v = e.to;
+      const w = e.weight;
+      if (v < 0 || v >= n) continue;
+      if (w < dist[u]![v]!) {
+        dist[u]![v] = w;
+        next[u]![v] = v;
+      }
+    }
+  }
+
+  for (let k = 0; k < n; k++) {
+    for (let i = 0; i < n; i++) {
+      if (dist[i]![k] === Number.POSITIVE_INFINITY) continue;
+      for (let j = 0; j < n; j++) {
+        if (dist[k]![j] === Number.POSITIVE_INFINITY) continue;
+        const nd = dist[i]![k]! + dist[k]![j]!;
+        if (nd < dist[i]![j]!) {
+          dist[i]![j] = nd;
+          next[i]![j] = next[i]![k]!;
+        }
+      }
+    }
+  }
+
+  let hasNegativeCycle = false;
+  for (let i = 0; i < n; i++) {
+    if (dist[i]![i] < 0) {
+      hasNegativeCycle = true;
+      break;
+    }
+  }
+
+  return { dist, next, hasNegativeCycle };
+}
+
+/**
  * Reconstruct a path from a `prev` array (as returned by `dijkstra`).
  *
  * @returns an array of vertices from start to target (inclusive), or [] if unreachable.
@@ -340,5 +470,31 @@ export function reconstructPath(
   if (path[path.length - 1] !== start) return [];
   path.reverse();
   return path;
+}
+
+/**
+ * Reconstruct a path from `start` to `target` using Floyd-Warshall `next` matrix.
+ *
+ * @returns vertices from start to target (inclusive), or [] if unreachable/invalid.
+ */
+export function reconstructFloydWarshallPath(
+  next: readonly (readonly number[])[],
+  start: number,
+  target: number,
+): number[] {
+  const n = next.length;
+  if (start < 0 || start >= n) return [];
+  if (target < 0 || target >= n) return [];
+  if ((next[start]?.[target] ?? -1) === -1) return [];
+
+  const path: number[] = [start];
+  let cur = start;
+  for (let steps = 0; steps < n; steps++) {
+    if (cur === target) return path;
+    cur = next[cur]![target]!;
+    if (cur === -1) return [];
+    path.push(cur);
+  }
+  return [];
 }
 

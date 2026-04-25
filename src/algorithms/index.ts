@@ -21,7 +21,12 @@ export { StringRollingHash } from './stringHashing.js';
 export { RabinKarp, RABIN_KARP_DEFAULT_MODS } from './rabinKarp.js';
 export { Trie } from './trie.js';
 export type { RabinKarpTripleMods } from './rabinKarp.js';
-export type { WeightedUndirectedEdge, TopologicalSortResult } from './graph.js';
+export type {
+  WeightedUndirectedEdge,
+  TopologicalSortResult,
+  BellmanFordResult,
+  FloydWarshallResult,
+} from './graph.js';
 export {
   breadthFirstSearch,
   depthFirstSearch,
@@ -29,6 +34,9 @@ export {
   topologicalSortIndegree,
   connectedComponents,
   dijkstra,
+  bellmanFord,
+  floydWarshall,
   reconstructPath,
+  reconstructFloydWarshallPath,
   kruskalMST,
 } from './graph.js';
