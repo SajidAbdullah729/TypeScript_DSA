@@ -330,9 +330,7 @@ for (const [key, value] of index) {
 
 ### Segment tree overview and complexity
 
-A segment tree is an indexable array backed by a tree so **range questions** (sum, min, max, or your own combine) and **updates** cost **O(log n)** instead of scanning the whole slice.
-
-Segment trees support **range queries** and **point updates** in **O(log n)**. Range endpoints are **inclusive**: `query(l, r)` covers indices `l` through `r`.
+A segment tree supports fast **range queries** and **updates**. For this package, ranges are inclusive: `query(l, r)`.
 
 **What each type does:**
 
@@ -345,7 +343,7 @@ Segment trees support **range queries** and **point updates** in **O(log n)**. R
 
 | Structure | Build | Point update | Range query | Extra |
 |-----------|-------|--------------|-------------|--------|
-| **GeneralSegmentTree**, **SegmentTree**, **SegmentTreeSum** / **Min** / **Max** | O(n) | O(log n) | O(log n) | Inclusive `[l, r]`; **GeneralSegmentTree** keeps raw `V` and uses `merge` + `buildLeaf` |
+| **GeneralSegmentTree**, **SegmentTree**, **SegmentTreeSum** / **Min** / **Max** | O(n) | O(log n) | O(log n) | Inclusive `[l, r]`; `GeneralSegmentTree` uses raw `V` + summary `T` |
 | **LazySegmentTreeSum** | O(n) | `set`: O(log n) | `rangeSum`: O(log n) | `rangeAdd` on a range: O(log n) |
 
 ### Segment tree: Sum, Min, Max and example
@@ -354,7 +352,7 @@ Segment trees support **range queries** and **point updates** in **O(log n)**. R
 - **`SegmentTreeMin`** — answers “what is the **minimum** in `[l, r]`?” after single-index updates.
 - **`SegmentTreeMax`** — answers “what is the **maximum** in `[l, r]`?” after single-index updates.
 
-Together they are fixed numeric implementations: build from initial values, **`update(i, value)`** for one index, **`query(l, r)`** for an inclusive range.
+These are fixed numeric trees with `update(i, value)` and inclusive `query(l, r)`.
 
 ```ts
 import {
@@ -375,7 +373,7 @@ const mx = new SegmentTreeMax([5, 2, 8, 1]);
 console.log(mx.query(0, 3)); // 8
 ```
 
-**Example — analytics / reporting (fixed buckets, range totals, single-day corrections):** each index is a **fixed bucket** (hour, day, version slot, …). You ask for the **sum** from bucket `a` through `b` and sometimes **fix one bucket** after late data or reconciliation — same API as above, wrapped for clarity.
+**Example use case:** fixed buckets (day/hour), range totals, and single-bucket corrections.
 
 ```ts
 import { SegmentTreeSum } from 'typescript-dsa-stl';
@@ -405,11 +403,11 @@ january.setDay(2, 1150); // corrected day 2
 console.log(january.totalBetweenDay(1, 3)); // sum over days 1..3
 ```
 
-In production you would usually **persist** the underlying series in a database and **rebuild** the tree when the period reloads; the tree stays useful in memory for dashboards, simulations, or request handlers that see heavy read/update traffic on the same window.
+In production, persist raw values and rebuild the tree when the period reloads.
 
 ### Generic SegmentTree
 
-**`SegmentTree<T>`** supports range queries for **any associative operation** (gcd, concatenation, bitwise OR, …) on a fixed-length array, with **point updates**, when element type and aggregate type are the same — pass an **associative** `combine` and a **neutral** value for query ranges that miss a segment (e.g. `0` for sum, `Infinity` for min).
+**`SegmentTree<T>`** supports any associative combine (gcd, concat, bitwise OR, etc.) with point updates. Provide `combine` and a neutral value.
 
 ```ts
 import { SegmentTree } from 'typescript-dsa-stl';
@@ -441,13 +439,13 @@ console.log(strTree.query(0, 2)); // 'abc'
 
 ### GeneralSegmentTree
 
-**`GeneralSegmentTree<T, V>`** keeps **raw** values of type **V** in the array while each segment stores a **different** summary type **T** (e.g. raw numbers in the array, but nodes keep sums of squares or custom stats).
+**`GeneralSegmentTree<T, V>`** keeps raw values as `V` and segment summaries as `T`.
 
-You supply:
+You provide:
 
-- **`merge(left, right)`** — combine two child aggregates (internal nodes).
-- **`neutral`** — identity for `merge` when a query does not overlap a segment.
-- **`buildLeaf(value, index)`** — build the leaf from the raw array on initial construction and on every `update`.
+- **`merge(left, right)`**: combine child summaries.
+- **`neutral`**: identity for non-overlapping ranges.
+- **`buildLeaf(value, index)`**: build a leaf from raw `V`.
 
 ```ts
 import { GeneralSegmentTree } from 'typescript-dsa-stl';
@@ -465,9 +463,9 @@ console.log(st.rawAt(1)); // 4 — current raw value at index 1
 
 ### LazySegmentTreeSum and example
 
-**`LazySegmentTreeSum`** maintains a numeric array where you can **add a constant to every element in a range**, **overwrite one cell**, and query **range sums** — all in **O(log n)** via lazy propagation (unlike the trees above, which only support point updates).
+**`LazySegmentTreeSum`** supports range add, point set, and range sum in **O(log n)** using lazy propagation.
 
-**`rangeAdd(l, r, delta)`** adds `delta` to every element in the inclusive range. **`rangeSum(l, r)`** returns the sum. **`set(i, value)`** assigns one position (lazy tags are applied along the path). All are **O(log n)** — see the complexity table in the overview above.
+`rangeAdd(l, r, delta)` updates a whole range, `rangeSum(l, r)` queries a range, and `set(i, value)` updates one index.
 
 ```ts
 import { LazySegmentTreeSum } from 'typescript-dsa-stl';
@@ -479,7 +477,7 @@ lazy.set(0, 100);
 console.log(lazy.rangeSum(0, 3)); // 100 + 5 + 5 + 0
 ```
 
-**Example — bulk adjustment on a slice, then aggregate:** apply the **same delta** to **every** element in an index range (bonuses, prorated credits, simulation shocks), then query **range sums** without updating each cell one by one.
+**Example use case:** apply one delta to a range, then query subtotals.
 
 ```ts
 import { LazySegmentTreeSum } from 'typescript-dsa-stl';
@@ -500,7 +498,7 @@ function simulateBulkBonusAndSubtotal(seatCount: number): void {
 simulateBulkBonusAndSubtotal(100);
 ```
 
-The same idea applies to **inventory deltas** across bin ranges, **loyalty points** batch credits by user-ID band (when IDs map to contiguous indices), or **game/simulation** state where many cells gain the same buff and you query partial totals.
+Same pattern works for inventory ranges, loyalty batches, and simulation buffs.
 
 ---
 
