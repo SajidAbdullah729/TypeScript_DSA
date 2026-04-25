@@ -278,23 +278,23 @@ cube.at(0).at(1).at(0);  // 3  (layer 0, row 1, col 0)
 
 ### OrderedMultiMap and OrderedMultiSet — use cases
 
-**OrderedMultiSet** is a sorted collection that allows duplicate elements (like C++ `std::multiset`). Use it when you need ordering and multiple copies of the same value.
+**OrderedMultiSet** keeps values sorted and allows duplicates.
 
 | Use case | Example |
 |----------|---------|
-| **Sorted runs / leaderboard with ties** | Store scores; multiple users can have the same score. Iterate in sorted order, use `count(score)` for ties. |
-| **Event timeline with repeated timestamps** | Add events by time; several events can share the same time. `add(timestamp)`, iterate in order. |
-| **K-th smallest in a multiset** | Keep elements sorted; k-th element is at index `k - 1` in iteration. |
-| **Range counts** | Combined with binary search ideas: count elements in `[low, high]` using `count` and iteration. |
+| **Leaderboard with ties** | Store repeated scores and iterate sorted. |
+| **Timeline with duplicate times** | Keep events sorted even with same timestamp. |
+| **K-th smallest** | Iterate sorted values and pick index `k - 1`. |
+| **Range stats** | Count values inside `[low, high]`. |
 
-**OrderedMultiMap** maps one key to multiple values while keeping keys sorted (like C++ `std::multimap`). Use it when a key can have several associated values and you need key order.
+**OrderedMultiMap** stores multiple values per key while keeping keys sorted.
 
 | Use case | Example |
 |----------|---------|
-| **Inverted index** | Key = term, values = document IDs containing that term. `set(term, docId)` for each occurrence; `getAll(term)` returns all doc IDs. |
-| **Grouping by key** | Key = category, values = items. `set(category, item)`; iterate keys in order, use `getAll(key)` per group. |
-| **One-to-many relations** | Key = user ID, values = session IDs. `set(userId, sessionId)`; `getAll(userId)` lists all sessions. |
-| **Time-series by bucket** | Key = time bucket, values = events. Sorted keys give chronological buckets; `getAll(bucket)` gets events in that bucket. |
+| **Inverted index** | `term -> docIds`. |
+| **Grouping** | `category -> items`. |
+| **One-to-many mapping** | `userId -> sessionIds`. |
+| **Time buckets** | `bucket -> events`, in key order. |
 
 **OrderedMultiSet example:**
 
@@ -893,7 +893,7 @@ console.log(path); // [0, 1, 2, 4]
 
 ### Knuth–Morris–Pratt (KMP), Rabin–Karp, Trie, and string rolling hash
 
-All four work on **UTF-16 code units** (same as `String` indexing). KMP and Rabin–Karp are **pattern matchers** (list all start indices of a pattern in a text). `Trie` is a **prefix tree** for fast dictionary operations (`insert`, exact word lookup, prefix lookup, deletion). `StringRollingHash` is a **substring-hash tool** on a **fixed** string—you combine it with your own logic (equality checks, binary search, etc.).
+All four operate on UTF-16 code units. KMP and Rabin–Karp find all pattern start indices, `Trie` is for dictionary/prefix lookups, and `StringRollingHash` gives fast substring hashes on one fixed string.
 
 #### When to use which
 
@@ -906,10 +906,10 @@ All four work on **UTF-16 code units** (same as `String` indexing). KMP and Rabi
 
 **Concrete situations**
 
-- **Use KMP** when you need a **guaranteed** linear scan (interviews, strict time bounds, large alphabets), or the pattern is **reused** across many searches (`new KnuthMorrisPratt(pattern)` once, `.search(text)` many times).
-- **Use Rabin–Karp** when a **rolling hash** model fits (e.g. one long stream, one pattern), or you later generalize to **several patterns of the same length** (compare each pattern’s triple hash to each window hash). Triple hashing keeps false hash positives negligible; **verification** still guarantees correct indices.
-- **Use `Trie`** when your workload is dictionary-like: store many words once, then do repeated `search(word)` and `startsWith(prefix)` checks in **O(L)**.
-- **Use `StringRollingHash`** when the problem is **“hash of s[l..r)”** many times on **one** `s`—e.g. check `s[i..i+k) === s[j..j+k)` via hash equality (then confirm if needed), or algorithms that **binary search** on length using substring hashes. For **only** “list all starts of P in T”, pick **KMP** or **Rabin–Karp** instead of building substring hashes by hand.
+- **KMP:** guaranteed linear matching, especially when reusing one pattern.
+- **Rabin–Karp:** rolling-hash style matching; useful for same-length pattern windows.
+- **`Trie`:** repeated exact/prefix queries over many stored words.
+- **`StringRollingHash`:** many substring-equality/hash queries on one fixed string.
 
 ```ts
 import { KnuthMorrisPratt, RabinKarp, Trie, StringRollingHash } from 'typescript-dsa-stl';
@@ -939,11 +939,11 @@ const rh = new StringRollingHash(s);
 const maybe = rh.substringHash(1, 3) === rh.substringHash(3, 3); // then compare slices if you need certainty
 ```
 
-**How KMP works:** Build an LPS (longest proper prefix that is also a suffix) table for the pattern, then scan the text once. On a mismatch, the LPS tells you how far to shift the pattern without moving the text pointer backward—**O(n + m)** time, **O(m)** extra space for the pattern’s LPS.
+**KMP:** builds an LPS table and scans once; **O(n + m)**.
 
-**How Rabin–Karp works:** Use **triple hashing**—three independent polynomial hashes (same base, three distinct prime moduli, see `RABIN_KARP_DEFAULT_MODS`). A position is a candidate only when **all three** window hashes match the pattern’s triple; then a **character-by-character** check runs so reported matches are always correct. Spurious triple collisions are negligible; average **O(n + m)**.
+**Rabin–Karp:** uses triple rolling hashes plus final character verification; average **O(n + m)**.
 
-**How rolling hash works:** Precompute prefix hashes and powers of a base modulo a prime. The hash of any substring `s[start .. start + length)` is derived from two prefix values—**O(n)** build, **O(1)** per substring query. Hashes can collide; for critical equality checks, compare actual strings after a hash match.
+**Rolling hash:** precompute prefix hashes for **O(1)** substring-hash queries after **O(n)** setup.
 
 ```ts
 import {
